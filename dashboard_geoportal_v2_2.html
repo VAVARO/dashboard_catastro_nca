@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Geoportal Ciencia Austral | Dashboard de Equipamiento CTCI</title>
+    <meta name="description" content="Visualizador Georreferenciado y Catastro de Equipamiento e Infraestructura Científica y Tecnológica (CTCI) - Nodo Ciencia Austral">
+    
+    <!-- Typography: Montserrat (Official Graphic Manual) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons: FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Leaflet.markercluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <!-- PapaParse CDN for real-time Google Sheets CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        /* ==========================================================================
+           OFFICIAL CORPORATE IDENTITY (Manual de Identidad Gráfica - Light Mode)
+           ========================================================================== */
+        :root {
+            /* Palette: Nodo Ciencia Austral Oficial */
+            --color-bg-app: #EFF7F0;                /* Fondo Principal Gris/Menta Claro */
+            --color-surface-white: #FFFFFF;         /* Superficies y Tarjetas */
+            --color-surface-subtle: #F6FAF7;        /* Superficie de contraste suave */
+            --color-surface-hover: #EDF6EF;         /* Hover suave institucional */
+            
+            --color-corp-blue-primary: #1E327B;     /* Azul Corporativo Primario */
+            --color-corp-blue-dark: #1C1F40;        /* Azul Oscuro / Tinta de Texto */
+            --color-corp-blue-secondary: #353976;   /* Azul Secundario */
+            --color-corp-blue-subtle: rgba(30, 50, 123, 0.08);
+
+            --color-corp-mint: #BDF8B8;             /* Verde Menta Corporativo */
+            --color-corp-mint-dim: rgba(189, 248, 184, 0.35);
+            --color-corp-mint-border: #A7D3AF;      /* Verde Salvia / Borde Chips */
+            --color-corp-sage: #88B991;             /* Verde Salvia Profundo */
+
+            --color-text-primary: #1C1F40;          /* Texto Principal Máximo Contraste */
+            --color-text-secondary: #353976;        /* Subtítulos y Jerarquía Media */
+            --color-text-muted: #5A6578;            /* Metadatos y Descripciones */
+            --color-text-light: #7E8B9F;            /* Texto Terciario */
+
+            /* Borders & Shadows */
+            --border-card: 1px solid rgba(30, 50, 123, 0.10);
+            --border-card-hover: 1px solid #1E327B;
+            --border-chip: 1px solid #A7D3AF;
+            --border-divider: 1px solid rgba(30, 50, 123, 0.08);
+
+            --shadow-header: 0 2px 14px rgba(28, 31, 64, 0.05);
+            --shadow-card: 0 4px 18px rgba(28, 31, 64, 0.05);
+            --shadow-card-hover: 0 8px 24px rgba(30, 50, 123, 0.10);
+            --shadow-modal: 0 20px 50px -10px rgba(28, 31, 64, 0.22);
+
+            /* Radii */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+
+            /* Motion & Easings (Emil Kowalski / Apple) */
+            --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            --duration-fast: 160ms;
+            --duration-normal: 240ms;
+        }
+
+        /* ==========================================================================
+           BASE & RESET
+           ========================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--color-bg-app);
+            color: var(--color-text-primary);
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #app-root {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            background-color: var(--color-bg-app);
+        }
+
+        /* ==========================================================================
+           HEADER ULTRA-CLEAN (Light Mode con Logo Protagónico)
+           ========================================================================== */
+        header.app-header {
+            height: 76px;
+            min-height: 76px;
+            padding: 0 28px;
+            background-color: var(--color-surface-white);
+            border-bottom: var(--border-divider);
+            box-shadow: var(--shadow-header);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            position: relative;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            user-select: none;
+        }
+
+        .brand-logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 52px;
+            position: relative;
+        }
+
+        .brand-logo-img {
+            height: 48px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+            transition: transform var(--duration-fast) var(--ease-out);
+        }
+
+        .brand-logo-fallback {
+            display: none;
+            height: 44px;
+            padding: 0 16px;
+            border-radius: var(--radius-md);
+            background-color: var(--color-corp-blue-primary);
+            color: #ffffff;
+            font-weight: 700;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-left: 2px solid rgba(30, 50, 123, 0.12);
+            padding-left: 18px;
+        }
+
+        .brand-title {
+            font-size: 1.12rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--color-corp-blue-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-title .badge-territory {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            background-color: var(--color-corp-mint);
+            color: var(--color-corp-blue-dark);
+            border: 1px solid var(--color-corp-mint-border);
+        }
+
+        .brand-subtitle {
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sync-badge-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            background-color: var(--color-bg-app);
+            border: 1px solid var(--color-corp-mint-border);
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--color-corp-blue-primary);
+        }
+
+        .pulse-indicator {
+            position: relative;
+            display: flex;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pulse-indicator .ping {
+            position: absolute;
+            display: inline-flex;
+            height: 100%;
+            width: 100%;
+            border-radius: var(--radius-full);
+            background-color: var(--color-corp-sage);
+            opacity: 0.75;
+            animation: pulseRing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .pulse-indicator .dot {
+            position: relative;
+            display: inline-flex;
+            border-radius: var(--radius-full);
+            height: 8px;
+            width: 8px;
+            background-color: var(--color-corp-blue-primary);
+        }
+
+        @keyframes pulseRing {
+            75%, 100% {
+                transform: scale(2.4);
+                opacity: 0;
+            }
+        }
+
+        .btn-sync {
+            background: transparent;
+            border: none;
+            color: var(--color-corp-blue-primary);
+            cursor: pointer;
+            padding: 2px 4px;
+            display: inline-flex;
+            align-items: center;
+            transition: transform var(--duration-fast);
+        }
+
+        .btn-sync:hover {
+            transform: rotate(45deg);
+        }
+
+        .btn-sync.spinning i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-header-action {
+            background-color: var(--color-corp-blue-primary);
+            border: 1px solid var(--color-corp-blue-primary);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(30, 50, 123, 0.15);
+        }
+
+        .btn-header-action:hover {
+            background-color: #16245A;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 50, 123, 0.22);
+        }
+
+        .btn-header-action:active {
+            transform: scale(0.97);
+        }
+
+        /* ==========================================================================
+           BARRA DE MÉTRICAS (KPI Widgets Light Mode)
+           ========================================================================== */
+        .kpi-section {
+            padding: 12px 28px;
+            background-color: var(--color-bg-app);
+            border-bottom: var(--border-divider);
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            z-index: 900;
+        }
+
+        .kpi-card {
+            background-color: var(--color-surface-white);
+            border: var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow-card);
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card-hover);
+            border-color: rgba(30, 50, 123, 0.25);
+        }
+
+        .kpi-icon-wrap {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            background-color: var(--color-bg-app);
+            color: var(--color-corp-blue-primary);
+            border: 1px solid var(--color-corp-mint-border);
+        }
+
+        .kpi-content {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .kpi-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--color-corp-blue-dark);
+            line-height: 1.1;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+
+        .kpi-label {
+            font-size: 0.70rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        /* ==========================================================================
+           MAIN WORKSPACE (Sidebar + Leaflet Map)
+           ========================================================================== */
+        .app-workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR (Filters & Full List) */
+        aside.app-sidebar {
+            width: 460px;
+            min-width: 420px;
+            max-width: 500px;
+            background-color: var(--color-bg-app);
+            border-right: var(--border-divider);
+            display: flex;
+            flex-direction: column;
+            z-index: 500;
+            position: relative;
+        }
+
+        /* Filter Controls */
+        .sidebar-controls {
+            padding: 16px 20px;
+            border-bottom: var(--border-divider);
+            background-color: var(--color-surface-white);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            background-color: var(--color-bg-app);
+            border: 1px solid rgba(30, 50, 123, 0.15);
+            border-radius: var(--radius-md);
+            padding: 0 36px 0 38px;
+            color: var(--color-corp-blue-dark);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.84rem;
+            font-weight: 500;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .search-input:focus {
+            border-color: var(--color-corp-blue-primary);
+            box-shadow: 0 0 0 3px var(--color-corp-mint-dim);
+            background-color: #ffffff;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: var(--color-text-light);
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            border-radius: var(--radius-full);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .search-clear-btn:hover {
+            color: var(--color-corp-blue-dark);
+            background-color: rgba(30, 50, 123, 0.1);
+        }
+
+        /* Filter Grid */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-field.span-2 {
+            grid-column: span 2;
+        }
+
+        .filter-label {
+            font-size: 0.66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-corp-blue-secondary);
+        }
+
+        .custom-select-wrap {
+            position: relative;
+        }
+
+        .custom-select {
+            width: 100%;
+            height: 36px;
+            background-color: var(--color-bg-app);
+            border: 1px solid rgba(30, 50, 123, 0.15);
+            border-radius: var(--radius-sm);
+            padding: 0 28px 0 10px;
+            color: var(--color-corp-blue-dark);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .custom-select:focus {
+            border-color: var(--color-corp-blue-primary);
+            box-shadow: 0 0 0 2px var(--color-corp-mint-dim);
+        }
+
+        .custom-select-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-corp-blue-primary);
+            font-size: 0.7rem;
+            pointer-events: none;
+        }
+
+        /* Active Filter Toolbar */
+        .filter-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: var(--color-surface-subtle);
+            border-bottom: var(--border-divider);
+            font-size: 0.76rem;
+        }
+
+        .results-count {
+            color: var(--color-text-muted);
+            font-weight: 600;
+        }
+
+        .results-count strong {
+            color: var(--color-corp-blue-primary);
+            font-weight: 800;
+        }
+
+        .btn-reset-filters {
+            background: transparent;
+            border: none;
+            color: var(--color-corp-blue-primary);
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background var(--duration-fast);
+        }
+
+        .btn-reset-filters:hover {
+            background-color: var(--color-corp-mint);
+        }
+
+        /* Equipment Cards Feed */
+        .equipment-cards-feed {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar Light */
+        .equipment-cards-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+        .equipment-cards-feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .equipment-cards-feed::-webkit-scrollbar-thumb {
+            background: rgba(30, 50, 123, 0.15);
+            border-radius: 3px;
+        }
+        .equipment-cards-feed::-webkit-scrollbar-thumb:hover {
+            background: rgba(30, 50, 123, 0.30);
+        }
+
+        /* Card Component (Sin Truncamiento, Altamente Legible) */
+        .card-equipment {
+            background-color: var(--color-surface-white);
+            border: var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            cursor: pointer;
+            transition: transform var(--duration-fast) var(--ease-out),
+                        border-color var(--duration-fast) var(--ease-out),
+                        box-shadow var(--duration-fast) var(--ease-out),
+                        background-color var(--duration-fast) var(--ease-out);
+            position: relative;
+            box-shadow: var(--shadow-card);
+            user-select: none;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .card-equipment:hover {
+                transform: translateY(-2px);
+                border-color: var(--color-corp-blue-primary);
+                box-shadow: var(--shadow-card-hover);
+            }
+        }
+
+        .card-equipment:active {
+            transform: scale(0.985);
+        }
+
+        .card-equipment.selected-card {
+            border-color: var(--color-corp-blue-primary);
+            background-color: var(--color-surface-subtle);
+            box-shadow: 0 0 0 1px var(--color-corp-blue-primary), var(--shadow-card-hover);
+        }
+
+        .card-equipment.selected-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--color-corp-blue-primary);
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+        }
+
+        .card-header-row {
+            margin-bottom: 8px;
+        }
+
+        /* Título Completo sin Truncar */
+        .card-title {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: var(--color-corp-blue-dark);
+            line-height: 1.38;
+            letter-spacing: -0.015em;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .card-institution {
+            font-size: 0.80rem;
+            font-weight: 700;
+            color: var(--color-corp-blue-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-location {
+            font-size: 0.74rem;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .tag-chip {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            background-color: var(--color-bg-app);
+            border: var(--border-chip);
+            color: var(--color-corp-blue-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-chip.tag-oecd {
+            background-color: rgba(189, 248, 184, 0.3);
+            color: var(--color-corp-blue-dark);
+            border-color: var(--color-corp-mint-border);
+        }
+
+        .card-snippet {
+            font-size: 0.76rem;
+            color: var(--color-text-muted);
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Animation Fade-in */
+        @keyframes fadeCardIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Empty State */
+        .feed-empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--color-text-muted);
+        }
+
+        .feed-empty-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-full);
+            background-color: var(--color-surface-white);
+            border: var(--border-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--color-corp-blue-primary);
+        }
+
+        /* ==========================================================================
+           VISUALIZADOR GEOESPACIAL (Leaflet & CartoDB Positron Light)
+           ========================================================================== */
+        main.app-map-container {
+            flex: 1;
+            position: relative;
+            background-color: #e5e9ec;
+            display: flex;
+        }
+
+        #map-canvas {
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        /* Floating Controls */
+        .map-floating-controls {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-ctrl-btn {
+            background-color: var(--color-surface-white);
+            border: var(--border-card);
+            color: var(--color-corp-blue-primary);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow-card);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .map-ctrl-btn:hover {
+            background-color: var(--color-corp-blue-primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .map-ctrl-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Custom Vector Pins (Azul Corporativo con Halo Verde Menta) */
+        .custom-geo-pin {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-pin-beacon {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-full);
+            background-color: var(--color-corp-mint);
+            opacity: 0.6;
+            animation: pinPulse 2.2s ease-out infinite;
+        }
+
+        .pulse-pin-core {
+            position: relative;
+            width: 15px;
+            height: 15px;
+            border-radius: var(--radius-full);
+            background-color: var(--color-corp-blue-primary);
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(30, 50, 123, 0.4);
+            transition: transform var(--duration-fast);
+        }
+
+        .custom-geo-pin:hover .pulse-pin-core {
+            transform: scale(1.3);
+            background-color: #16245A;
+        }
+
+        /* Official Nodo Cluster Badges (Leaflet.markercluster) */
+        .custom-cluster-icon {
+            background: transparent;
+            border: none;
+        }
+
+        .cluster-badge-nodo {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: var(--color-corp-blue-primary, #1E327B);
+            color: #FFFFFF;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 0 4px var(--color-corp-mint, #BDF8B8), 0 4px 12px rgba(30, 50, 123, 0.35);
+            transition: transform var(--duration-fast, 0.2s) var(--ease-out, ease);
+            cursor: pointer;
+        }
+
+        .cluster-badge-nodo:hover {
+            transform: scale(1.1);
+            background-color: var(--color-corp-blue-dark, #16245A);
+        }
+
+        /* Leaflet Popup Restyling (Light UI) */
+        .leaflet-popup-content-wrapper {
+            background-color: var(--color-surface-white) !important;
+            color: var(--color-text-primary) !important;
+            border: 1px solid rgba(30, 50, 123, 0.15) !important;
+            border-radius: var(--radius-lg) !important;
+            padding: 0 !important;
+            box-shadow: var(--shadow-modal) !important;
+        }
+
+        .leaflet-popup-tip {
+            background-color: var(--color-surface-white) !important;
+            border: 1px solid rgba(30, 50, 123, 0.15) !important;
+        }
+
+        .popup-card-content {
+            padding: 16px 18px;
+            width: 290px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .popup-title {
+            font-size: 0.90rem;
+            font-weight: 700;
+            color: var(--color-corp-blue-dark);
+            line-height: 1.3;
+        }
+
+        .popup-institution {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--color-corp-blue-primary);
+        }
+
+        .popup-location {
+            font-size: 0.74rem;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-popup-inspect {
+            margin-top: 4px;
+            width: 100%;
+            background-color: var(--color-corp-blue-primary);
+            border: none;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all var(--duration-fast);
+        }
+
+        .btn-popup-inspect:hover {
+            background-color: #16245A;
+        }
+
+        /* ==========================================================================
+           MODAL DE FICHA TÉCNICA DETALLADA (Light UI)
+           ========================================================================== */
+        .modal-backdrop-layer {
+            position: fixed;
+            inset: 0;
+            background: rgba(28, 31, 64, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity var(--duration-normal) var(--ease-out),
+                        visibility var(--duration-normal);
+        }
+
+        .modal-backdrop-layer.modal-active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .modal-card-window {
+            background-color: var(--color-surface-white);
+            border: var(--border-card);
+            border-radius: var(--radius-xl);
+            width: 780px;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-modal);
+            transform: scale(0.96);
+            transition: transform var(--duration-normal) var(--ease-spring);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-backdrop-layer.modal-active .modal-card-window {
+            transform: scale(1);
+        }
+
+        .modal-header-section {
+            padding: 22px 28px 18px 28px;
+            border-bottom: var(--border-divider);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            background-color: var(--color-surface-subtle);
+        }
+
+        .modal-title-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--color-corp-blue-dark);
+            line-height: 1.25;
+            margin-bottom: 4px;
+        }
+
+        .modal-inst-badge {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--color-corp-blue-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close-btn {
+            background-color: #ffffff;
+            border: var(--border-card);
+            color: var(--color-text-muted);
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--duration-fast);
+        }
+
+        .modal-close-btn:hover {
+            background-color: var(--color-corp-blue-primary);
+            color: #ffffff;
+        }
+
+        .modal-scroll-body {
+            padding: 24px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background-color: var(--color-surface-subtle);
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            border: var(--border-card);
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .spec-item.span-all {
+            grid-column: span 2;
+        }
+
+        .spec-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+        }
+
+        .spec-value {
+            font-size: 0.86rem;
+            color: var(--color-corp-blue-dark);
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .spec-value.highlight-blue {
+            color: var(--color-corp-blue-primary);
+            font-weight: 700;
+        }
+
+        .spec-value.highlight-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.80rem;
+            color: var(--color-corp-blue-secondary);
+        }
+
+        .modal-block-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-section-title {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-corp-blue-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-desc-text {
+            font-size: 0.86rem;
+            line-height: 1.65;
+            color: var(--color-corp-blue-dark);
+            background-color: var(--color-surface-subtle);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: var(--border-card);
+        }
+
+        .modal-publications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pub-link-item {
+            background-color: var(--color-surface-subtle);
+            border: var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 0.80rem;
+            font-weight: 500;
+            color: var(--color-corp-blue-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            text-decoration: none;
+            transition: all var(--duration-fast);
+        }
+
+        .pub-link-item:hover {
+            border-color: var(--color-corp-blue-primary);
+            background-color: #ffffff;
+            transform: translateX(2px);
+        }
+
+        .modal-footer-section {
+            padding: 16px 28px;
+            border-top: var(--border-divider);
+            background-color: var(--color-surface-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .btn-modal-action {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .btn-modal-primary {
+            background-color: var(--color-corp-blue-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(30, 50, 123, 0.20);
+        }
+
+        .btn-modal-primary:hover {
+            background-color: #16245A;
+            transform: translateY(-1px);
+        }
+
+        .btn-modal-secondary {
+            background-color: #ffffff;
+            color: var(--color-corp-blue-primary);
+            border: var(--border-card);
+        }
+
+        .btn-modal-secondary:hover {
+            background-color: var(--color-bg-app);
+        }
+
+        /* Toast Feedback */
+        .toast-banner {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--color-corp-blue-dark);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            font-size: 0.80rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-modal);
+            z-index: 3000;
+            transition: transform var(--duration-normal) var(--ease-spring);
+        }
+
+        .toast-banner.toast-visible {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-banner i {
+            color: var(--color-corp-mint);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .kpi-section {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            aside.app-sidebar {
+                width: 380px;
+                min-width: 340px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header.app-header {
+                height: 64px;
+                padding: 0 16px;
+            }
+            .brand-subtitle {
+                display: none;
+            }
+            .kpi-section {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 8px 16px;
+                gap: 8px;
+            }
+            .app-workspace {
+                flex-direction: column;
+            }
+            aside.app-sidebar {
+                width: 100%;
+                max-width: none;
+                height: 50vh;
+                border-right: none;
+                border-bottom: var(--border-divider);
+            }
+            main.app-map-container {
+                height: 50vh;
+            }
+            .modal-specs-grid {
+                grid-template-columns: 1fr;
+            }
+            .spec-item.span-all {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-root">
+        
+        <!-- HEADER ULTRA-CLEAN -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-logo-wrap">
+                    <img src="./Logo-Nodo-sinfondo-1-scaled.png" 
+                         alt="Nodo Ciencia Austral Logo" 
+                         class="brand-logo-img" 
+                         onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';" />
+                    <div id="logoFallback" class="brand-logo-fallback">
+                        <i class="fa-solid fa-compass"></i> Nodo Ciencia Austral
+                    </div>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">
+                        GEOPORTAL CIENCIA AUSTRAL
+                        <span class="badge-territory">CTCI</span>
+                    </div>
+                    <div class="brand-subtitle">Catastro y Visualizador Georreferenciado de Equipamiento Científico</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="sync-badge-container">
+                    <span class="pulse-indicator">
+                        <span class="ping"></span>
+                        <span class="dot"></span>
+                    </span>
+                    <span id="syncStatusLabel">Google Sheets Live</span>
+                    <button class="btn-sync" id="btnSyncRefresh" title="Forzar sincronización de datos con Google Sheets" onclick="fetchLiveDataset(true)">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+                
+                <button class="btn-header-action" onclick="exportFilteredDataCSV()" title="Descargar datos en formato CSV">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Exportar CSV</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI STATS BAR (Light Widgets) -->
+        <section class="kpi-section" aria-label="Métricas Clave del Catastro">
+            <div class="kpi-card">
+                <div class="kpi-icon-wrap">
+                    <i class="fa-solid fa-cubes-stacked"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpiTotal">29</div>
+                    <div class="kpi-label">Total Equipos</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon-wrap">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpiInstitutions">9</div>
+                    <div class="kpi-label">Instituciones</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon-wrap">
+                    <i class="fa-solid fa-mountain-sun"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpiAysen">18</div>
+                    <div class="kpi-label">Región de Aysén</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon-wrap">
+                    <i class="fa-solid fa-snowflake"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpiMagallanes">11</div>
+                    <div class="kpi-label">Magallanes / Antártica</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon-wrap">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpiOecd">4</div>
+                    <div class="kpi-label">Áreas OCDE</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN WORKSPACE -->
+        <div class="app-workspace">
+            
+            <!-- SIDEBAR: Search & Cards (Sin Truncamiento) -->
+            <aside class="app-sidebar">
+                
+                <!-- Filter Controls -->
+                <div class="sidebar-controls">
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" 
+                               id="searchInput" 
+                               class="search-input" 
+                               placeholder="Buscar equipo, marca, tecnología, DOI..." 
+                               autocomplete="off"
+                               oninput="handleSearchInput()" />
+                        <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" title="Limpiar búsqueda">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="filters-grid">
+                        <div class="filter-field">
+                            <label class="filter-label" for="selectInstitution">Institución</label>
+                            <div class="custom-select-wrap">
+                                <select id="selectInstitution" class="custom-select" onchange="applyFilters()">
+                                    <option value="ALL">Todas las Instituciones</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="filter-field">
+                            <label class="filter-label" for="selectRegion">Territorio / Región</label>
+                            <div class="custom-select-wrap">
+                                <select id="selectRegion" class="custom-select" onchange="applyFilters()">
+                                    <option value="ALL">Todas las Regiones</option>
+                                    <option value="Aysén">Región de Aysén</option>
+                                    <option value="Magallanes">Magallanes y Antártica</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="filter-field">
+                            <label class="filter-label" for="selectCategory">Categoría Técnica ANID</label>
+                            <div class="custom-select-wrap">
+                                <select id="selectCategory" class="custom-select" onchange="applyFilters()">
+                                    <option value="ALL">Todas las Categorías</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="filter-field">
+                            <label class="filter-label" for="selectOecd">Área de Conocimiento OCDE</label>
+                            <div class="custom-select-wrap">
+                                <select id="selectOecd" class="custom-select" onchange="applyFilters()">
+                                    <option value="ALL">Todas las Áreas OCDE</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Reset Bar -->
+                <div class="filter-status-bar">
+                    <div class="results-count">
+                        Mostrando <strong id="filterCount">0</strong> de <span id="filterTotal">0</span> equipos
+                    </div>
+                    <button class="btn-reset-filters" id="btnResetFilters" onclick="resetAllFilters()">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Restablecer
+                    </button>
+                </div>
+
+                <!-- Cards Feed -->
+                <div class="equipment-cards-feed" id="cardsContainer">
+                    <!-- Dynamic rendering -->
+                </div>
+            </aside>
+
+            <!-- MAP CONTAINER -->
+            <main class="app-map-container">
+                <div id="map-canvas"></div>
+
+                <!-- Floating Map Controls -->
+                <div class="map-floating-controls">
+                    <button class="map-ctrl-btn" onclick="resetMapPerspective()" title="Centrar mapa en Macrozona Austral">
+                        <i class="fa-solid fa-expand"></i>
+                        <span>Vista Austral</span>
+                    </button>
+                    <button class="map-ctrl-btn" onclick="focusRegion('Aysen')" title="Zoom a la Región de Aysén">
+                        <i class="fa-solid fa-mountain"></i>
+                        <span>Aysén</span>
+                    </button>
+                    <button class="map-ctrl-btn" onclick="focusRegion('Magallanes')" title="Zoom a Magallanes y Territorio Antártico">
+                        <i class="fa-solid fa-anchor"></i>
+                        <span>Magallanes & Antártica</span>
+                    </button>
+                </div>
+            </main>
+        </div>
+
+        <!-- MODAL DE FICHA TÉCNICA DETALLADA -->
+        <div class="modal-backdrop-layer" id="modalBackdrop" onclick="handleBackdropClick(event)">
+            <div class="modal-card-window" id="modalCard">
+                
+                <div class="modal-header-section">
+                    <div class="modal-header-content">
+                        <h2 class="modal-title-text" id="modalTitle">Nombre del Equipamiento</h2>
+                        <div class="modal-inst-badge" id="modalInstitution">
+                            <i class="fa-solid fa-building-columns"></i> Institución Responsable
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeModal()" title="Cerrar ficha">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="modal-scroll-body">
+                    <!-- Technical Specs Grid -->
+                    <div class="modal-specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">Marca y Modelo Exacto</span>
+                            <span class="spec-value highlight-blue" id="modalBrand">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Categoría Técnica ANID</span>
+                            <span class="spec-value" id="modalCategory">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Área de Conocimiento OCDE</span>
+                            <span class="spec-value" id="modalOecd">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Año Adjudicación / Puesta en Marcha</span>
+                            <span class="spec-value" id="modalYear">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Fuente de Financiamiento</span>
+                            <span class="spec-value" id="modalFunding">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Inversión de Adquisición</span>
+                            <span class="spec-value highlight-mono" id="modalCost">-</span>
+                        </div>
+                        <div class="spec-item span-all">
+                            <span class="spec-label">Ubicación Física, Laboratorio y Campus</span>
+                            <span class="spec-value" id="modalLocation">-</span>
+                        </div>
+                        <div class="spec-item span-all">
+                            <span class="spec-label">Coordenadas Georreferenciadas (Latitud, Longitud)</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span class="spec-value highlight-mono" id="modalCoords">-</span>
+                                <button class="btn-modal-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="copyModalCoords()">
+                                    <i class="fa-regular fa-copy"></i> Copiar Coordenadas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description Block -->
+                    <div class="modal-block-section">
+                        <span class="modal-section-title"><i class="fa-solid fa-circle-info"></i> Descripción y Propósito Científico</span>
+                        <div class="modal-desc-text" id="modalDesc">-</div>
+                    </div>
+
+                    <!-- Operational & Maintenance Section -->
+                    <div class="modal-specs-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">Personal Técnico Responsable</span>
+                            <span class="spec-value" id="modalStaff">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Esquema de Mantenimiento</span>
+                            <span class="spec-value" id="modalMaintenance">-</span>
+                        </div>
+                        <div class="spec-item span-all">
+                            <span class="spec-label">Limitantes Operativas Actuales</span>
+                            <span class="spec-value" id="modalLimits">-</span>
+                        </div>
+                        <div class="spec-item span-all">
+                            <span class="spec-label">Modelo de Costos / Acceso</span>
+                            <span class="spec-value" id="modalCostModel">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Scientific Publications -->
+                    <div class="modal-block-section" id="modalPubsSection">
+                        <span class="modal-section-title"><i class="fa-solid fa-book-bookmark"></i> Producción Científica & Publicaciones Asociadas</span>
+                        <div class="modal-publications-list" id="modalPubsList">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-section">
+                    <button class="btn-modal-secondary" onclick="flyToCurrentEquipment()">
+                        <i class="fa-solid fa-location-crosshairs"></i> Centrar en Mapa
+                    </button>
+                    <a href="#" id="modalContactLink" target="_blank" class="btn-modal-action btn-modal-primary">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span id="modalContactBtnText">Contactar / Solicitar Acceso</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Toast Feedback -->
+        <div id="toastNotification" class="toast-banner">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="toastMessage">Notificación</span>
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Leaflet.markercluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        /* ==========================================================================
+           DATA & STATE MANAGEMENT (100% DINÁMICO DESDE GOOGLE SHEETS)
+           ========================================================================== */
+        
+        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGJUpXYhYaA5hIrCTvz2yyOX1OJcSPkuhzJKU-vSO3-8F8AANzwIzpUXtXJjobEpi7ZPMpKS9hdiQV/pub?output=csv';
+
+        /* --------------------------------------------------------------------------
+           1. DICCIONARIO DE DESCRIPCIONES CIENTÍFICAS (catastro_equipos_cientificos.md)
+           -------------------------------------------------------------------------- */
+        const SCIENTIFIC_DESCRIPTIONS = {
+            "Microscopio de Fuerzas Atómicas": "Este microscopio de fuerzas atómicas (AFM, por sus siglas en inglés) es un instrumento de caracterización a nanoescala de alta resolución que opera barriendo una sonda extremadamente afilada (punta de cantiléver) sobre la superficie de una muestra. A medida que la punta interactúa con la superficie, las fuerzas de Van der Waals, electrostáticas o magnéticas desvían la palanca, desviación que se detecta mediante un haz láser reflejado hacia un fotodiodo segmentado. Este sistema permite generar mapas topográficos tridimensionales detallados con resolución nanométrica, superando con creces el límite de difracción de la microscopía óptica convencional.\n\nEl equipo está especialmente configurado para aplicaciones en biociencias y física de materiales. Permite estudiar la topografía de muestras biológicas como membranas celulares, proteínas y filamentos de ADN en su estado nativo y en condiciones fisiológicas (medios líquidos) sin necesidad de aplicar recubrimientos conductores. Además, tiene la capacidad de realizar espectroscopía de fuerza, midiendo propiedades mecánicas locales como la rigidez, elasticidad, adhesión y viscoelasticidad de las muestras a nivel molecular.",
+
+            "Analizador Metabólico Seahorse XF Pro": "El Seahorse XF Pro es un analizador metabólico de alto rendimiento que mide en tiempo real el consumo de oxígeno (OCR, indicador de la respiración mitocondrial) y la tasa de acidificación extracelular (ECAR/PER, indicador de la glucólisis y eflujo de protones) en células vivas estructuradas en placas de 96 pocillos. El dispositivo opera mediante sensores fluorométricos ópticos de estado sólido que descienden en cada pocillo creando un microvolumen temporal y cerrado de apenas unos microlitros. Esto permite registrar fluctuaciones de oxígeno y pH causadas por la actividad metabólica celular de manera no invasiva y no destructiva.\n\nEl instrumento cuenta con un sistema automatizado de inyección neumática de hasta cuatro compuestos o drogas metabólicas por pocillo, facilitando la evaluación consecutiva de la respuesta celular ante estímulos o estresores químicos. Se aplica en el estudio del metabolismo del cáncer, toxicología mitocondrial, activación de células del sistema inmunitario, envejecimiento celular y fisiología celular general. Asimismo, es compatible con modelos celulares tridimensionales complejos como esferoides, organoides y preparaciones de mitocondrias aisladas.",
+
+            "Citómetro de Flujo Espectral Cytek Aurora": "El Cytek Aurora es un citómetro de flujo de última generación que emplea tecnología espectral de espectro completo para analizar células o partículas individuales en suspensión. A diferencia de los citómetros tradicionales que aíslan la emisión de fluorocromos mediante filtros de banda estrecha, este sistema utiliza tres láseres spatially separated (Violeta a 405 nm, Azul a 488 nm y Rojo a 640 nm) acoplados a una serie de detectores de fotodiodos de avalancha (APD) distribuidos en 38 canales de detección. Esto permite capturar la firma de emisión espectral completa y única de cada colorante fluorescente, facilitando la separación de señales ópticas que se solapan significativamente.\n\nSu principal valor científico es la capacidad de realizar inmunofenotipado multiparamétrico de alta complejidad (paneles de más de 20 colores simultáneos) a partir de muestras biológicas individuales, reduciendo el volumen de muestra y optimizando la resolución de poblaciones celulares raras. Cuenta con algoritmos avanzados de desmezcla espectral (unmixing) y extracción de autofluorescencia basal, lo que resulta ideal para el estudio de muestras con alto ruido de fondo. Sus aplicaciones abarcan la inmunología avanzada, la viabilidad celular, la microbiología marina y la caracterización de biomarcadores en investigación biomédica y ambiental.",
+
+            "Dron Multiespectral": "Este sistema aéreo no tripulado (UAV) consiste en un quadcopter robusto de fibra de carbono (Microdrones md4-1000) integrado con una cámara multiespectral de precisión (Tetracam Macaw-T). El dron proporciona una plataforma de vuelo de alta estabilidad y autonomía (entre 30 y 45 minutos), capaz de operar bajo condiciones climáticas desafiantes de viento y temperatura. La cámara multiespectral captura imágenes de forma simultánea en múltiples bandas espectrales estrechas (verde, rojo, borde rojo e infrarrojo cercano), registrando firmas de reflectancia de la superficie que no son perceptibles al ojo humano.\n\nEl propósito del equipo es la teledetección de alta resolución para estudiar la estructura y la salud de los ecosistemas terrestres y acuáticos. Al procesar las imágenes multiespectrales capturadas, los investigadores pueden calcular índices de vegetación como el NDVI (Índice de Vegetación de Diferencia Normalizada) para evaluar el vigor fotosintético, cuantificar el estrés hídrico forestal, mapear la cobertura de turberas, estimar biomasa y detectar especies exóticas invasoras. Es una herramienta fundamental para la agricultura de precisión, el monitoreo ambiental y el estudio del cambio climático en la geografía de la Patagonia.",
+
+            "Base de Luz Transmitida LED": "Este equipo es una base de luz transmitida (TL, por sus siglas en inglés) equipada con tecnología de iluminación LED de alta potencia, diseñada para ser utilizada como soporte y fuente lumínica avanzada en microscopía óptica y estereomicroscopía. El sistema funciona proyectando un haz de luz uniforme a través de la muestra desde la parte inferior, lo que resulta fundamental para la observación de especímenes biológicos, geológicos o de materiales que presenten características transparentes o translúcidas. La tecnología LED integrada asegura una iluminación fría de temperatura de color constante, lo que previene el sobrecalentamiento y la degradación de muestras biológicas vivas durante observaciones prolongadas.\n\nEl propósito científico de esta plataforma es proporcionar la iluminación homogénea y de alto contraste necesaria para la disección, manipulación y análisis micromorfológico tridimensional. Permite la integración de diferentes técnicas de contraste óptico (como campo claro, campo oscuro y contraste de alivio), optimizando la visualización de estructuras internas complejas y límites de grano en muestras minerales. Se aplica en laboratorios de investigación biológica para la manipulación de cultivos celulares, embriología y fitopatología, así como en geología y control de calidad de materiales.",
+
+            "Cromatógrafo Iónico Dionex": "El cromatógrafo iónico Dionex ICS-5000 es un sistema analítico diseñado para la separación y cuantificación rápida de iones (tanto aniones como cationes) disueltos en muestras acuosas. El equipo funciona inyectando la muestra líquida en una corriente de fase móvil (eluyente) que es impulsada a alta presión a través de una columna cromatográfica rellena de resina de intercambio iónico (fase estacionaria). Los iones de la muestra interactúan químicamente con la resina a diferentes velocidades según su carga y tamaño, lo que provoca su separación temporal en bandas individuales que finalmente pasan por un detector de conductividad de alta sensibilidad.\n\nEste instrumento es esencial para el análisis químico de aguas naturales (ríos, lagos, fiordos y acuíferos) e hidroquímica de suelos. Es capaz de cuantificar con gran precisión aniones como cloruro, nitrato, sulfato, fosfato y fluoruro, así como cationes principales como amonio, sodio, potasio, calcio y magnesio. Sus aplicaciones principales incluyen el monitoreo de la calidad del agua, estudios de ciclos biogeoquímicos de nutrientes, detección de contaminantes antropogénicos y análisis agroquímicos en ecosistemas de la Patagonia.",
+
+            "Microanalizador de Carbono, Nitrógeno e Hidrógeno": "El Leco TruSpec CHN Micro es un analizador elemental automatizado diseñado para determinar simultáneamente el porcentaje de carbono, nitrógeno e hidrógeno en micro-muestras orgánicas e inorgánicas sólidas y líquidas. Su funcionamiento se basa en el método de combustión de Dumas: la muestra se pesa con alta precisión y se quema a temperaturas elevadas (alrededor de 950°C) en una atmósfera de oxígeno puro. Los gases de combustión resultantes (CO2, H2O y óxidos de nitrógeno reducidos a N2) son transportados por un gas portador (helio) hacia detectores específicos: celdas de infrarrojo no dispersivo (NDIR) para carbono e hidrógeno, y un detector de conductividad térmica (TCD) para nitrógeno.\n\nEl propósito científico de este equipo es suministrar datos analíticos precisos sobre la composición elemental de una amplia variedad de muestras biológicas y ecológicas (suelos, sedimentos, tejidos vegetales, fauna y biomasa microbiana). Se utiliza en investigaciones sobre fertilidad de suelos, balance de carbono, ecología trófica y ciclos biogeoquímicos. Es clave para comprender el flujo de nutrientes y la estequiometría de los organismos en ambientes terrestres y acuáticos.",
+
+            "Analizador de Carbono Orgánico Total y Nitrógeno Total (CIEP)": "Este analizador determina la concentración de carbono orgánico total (TOC), carbono inorgánico disuelto (IC) y nitrógeno total (TN) en muestras acuosas. El equipo utiliza un método de combustión catalítica a alta temperatura (680°C) que asegura la descomposición térmica completa de compuestos orgánicos persistentes, insolubles o de alto peso molecular presentes en el agua. El dióxido de carbono (CO2) generado en la combustión se detecta mediante un detector de infrarrojo no dispersivo (NDIR) de alta sensibilidad, mientras que el óxido nítrico (NO) derivado del nitrógeno se cuantifica mediante un detector de quimioluminiscencia.\n\nEl instrumento cuenta con un sistema de dilución automática que le permite analizar desde aguas ultrapuras (como agua destilada y deshielos glaciares) hasta aguas de alta salinidad y altamente contaminadas sin saturar el sistema. Es de gran utilidad en estudios ecológicos para determinar la concentración de carbono orgánico disuelto (DOC) en ríos y fiordos, monitorear la calidad del agua de consumo y evaluar el aporte de nutrientes y materia orgánica en las cuencas de drenaje costero en la macrozona.",
+
+            "Espectrofluorímetro Aqualog": "El Aqualog de Horiba es un espectrofluorímetro óptico de alta velocidad que combina de forma simultánea la espectroscopía de absorbancia ultravioleta-visible con la espectroscopía de fluorescencia tridimensional. Utiliza la tecnología A-TEEM (Absorbanza-Transmisión y Matrices de Excitación-Emisión) que permite registrar matrices de fluorescencia (EEMs) en segundos, en contraste con los fluorímetros de barrido convencionales que toman minutos u horas. Para ello, emplea una lámpara de arco de xenón de 150W, monocromadores de rejilla y un detector de dispositivo de carga acoplada (CCD) refrigerado para la fluorescencia, junto a un fotodiodo de silicio para la absorbancia.\n\nEste equipo es una herramienta estándar para caracterizar la Materia Orgánica Disuelta Coloreada (CDOM) en sistemas acuáticos continentales y marinos. Permite generar 'huellas dactilares' espectrales moleculares que identifican el origen (terrestre o microbiano) y el nivel de degradación de la materia orgánica disuelta. Se aplica en el monitoreo de procesos de potabilización de agua, oceanografía química para el seguimiento de masas de agua, detección de contaminantes orgánicos e hidrocarburos, e investigaciones sobre el ciclo global del carbono.",
+
+            "Plataforma Oceanográfica Multiparamétrica Subsuperficial": "Esta plataforma oceanográfica consiste en una red integrada de instrumentos y sensores autónomos montados sobre una estructura de anclaje subsuperficial y de fondo marino (Lander). Entre los sensores integrados destacan unidades CTD (conductividad, temperatura y profundidad), sensores ópticos de oxígeno disuelto (ODO), sensores de presión parcial de dióxido de carbono (pCO2) ProOceanus y perfiladores de corriente acústicos Doppler (ADCP Nortek Signature500). El sistema registra de manera continua las propiedades físicas, químicas y acústicas del agua en un punto fijo del océano durante extensos periodos (meses a un año).\n\nEl propósito científico es la recolección de series temporales de datos oceanográficos continuos y de alta resolución en zonas costeras australes y antárticas bajo condiciones invernales extremas. Permite monitorizar el cambio climático global mediante el estudio de la variabilidad estacional de las corrientes marinas, las propiedades físicas de las masas de agua y los procesos de acidificación oceánica (midiendo directamente el CO2 disuelto). Además, incorpora un hidrófono registrador acústico (Aural) para la monitorización pasiva de mamíferos marinos y niveles de ruido ambiental.",
+
+            "Sistema Autónomo Ferrybox (INACH)": "El FerryBox I es un sistema automatizado de monitoreo oceanográfico de flujo continuo diseñado para operar permanentemente a bordo de buques científicos o de transporte de pasajeros (ferries). El equipo succiona agua de mar superficial continuamente a través de una toma en el casco del barco y la hace fluir a través de una cámara con múltiples sensores de estado sólido y ópticos. Registra variables físico-químicas clave como la temperatura, salinidad, pH, turbidez, concentración de oxígeno disuelto y fluorescencia de clorofila-a en tiempo real, georreferenciando automáticamente cada dato con coordenadas GPS del buque.\n\nEste sistema permite obtener transectos oceanográficos repetitivos y de alta resolución espacial a lo largo de las rutas de navegación frecuentes, cubriendo grandes distancias de forma eficiente. Sus aplicaciones principales incluyen el monitoreo de floraciones algales nocivas (FAN o mareas rojas), la caracterización de los gradientes de salinidad y temperatura producidos por el derretimiento de glaciares, y el estudio de los impactos del cambio climático sobre la productividad primaria y la estructura física de las aguas polares y subpolares.",
+
+            "Microtomógrafo de Rayos X Micro CT": "El Bruker SkyScan 1273 es un microtomógrafo computarizado tridimensional (micro-CT) de mesa de gran capacidad. Funciona haciendo incidir un haz de rayos X de alta energía (hasta 130 kV) sobre una muestra colocada en una platina giratoria. Un detector CMOS de 6 megapíxeles captura imágenes de proyección en dos dimensiones que registran la atenuación de los rayos X al atravesar el objeto desde múltiples ángulos durante una rotación completa de 360°. Finalmente, un software especializado procesa y reconstruye estas proyecciones bidimensionales para obtener un modelo tridimensional detallado de la estructura interna del objeto a escala micrométrica.\n\nEste instrumento ofrece la ventaja de realizar análisis y caracterización estructural interna de forma completamente no destructiva. Es ampliamente utilizado en paleontología, geología y biología para estudiar fósiles, porosidad y microestructura de rocas, y tejidos vegetales o animales. En el ámbito marino austral y antártico, es una herramienta fundamental para evaluar el impacto de la acidificación del océano en la tasa de calcificación de conchas y esqueletos de moluscos, corales y microplancton calcáreo.",
+
+            "Glider": "El Seaexplorer X2 es un vehículo autónomo submarino (planeador o glider) de alta resistencia, diseñado para el monitoreo oceanográfico tridimensional continuo de largo alcance. El vehículo carece de propulsión convencional por hélice; en su lugar, se desplaza variando su flotabilidad mediante una vejiga de aceite interna que infla o desinfla para cambiar su volumen y densidad. La resistencia del agua sobre su fuselaje hidrodinámico sin alas tradicionales convierte este movimiento vertical de hundimiento y ascenso en un desplazamiento horizontal lento, describiendo un perfil de navegación en 'diente de sierra' de hasta 1,000 metros de profundidad.\n\nEl planeador transporta sensores para medir temperatura, salinidad, oxígeno disuelto, turbidez y clorofila. Es capaz de operar de manera ininterrumpida durante semanas o meses, emergiendo periódicamente a la superficie para retransmitir los datos recolectados y recibir instrucciones mediante telemetría satelital Iridium. Se utiliza en el estudio físico y biológico de masas de agua de difícil acceso, el mapeo vertical continuo del océano y la recolección de datos ambientales de base para modelos de cambio climático y oceanografía regional.",
+
+            "Plataforma de Secuenciación Genética a Bordo del AP Almirante Viel": "Esta plataforma de secuenciación de ADN y ARN de alto rendimiento está diseñada para operar de forma integrada en el laboratorio científico del nuevo rompehielos científico-militar chileno, el AP Almirante Viel. El sistema emplea tecnologías de secuenciación de tercera generación (como la secuenciación de nanoporos o similares de tamaño compacto), que determinan la secuencia de nucleótidos midiendo los cambios en la corriente eléctrica generados cuando las cadenas individuales de ácidos nucleicos atraviesan canales proteicos microscópicos (nanoporos).\n\nLa plataforma posibilita la secuenciación molecular en tiempo real directamente en alta mar, reduciendo significativamente los sesgos y la degradación de muestras que ocurren al transportarlas a laboratorios continentales. Sus aplicaciones científicas primarias son el análisis biogeográfico y de biodiversidad mediante ADN ambiental (eDNA), el estudio genómico de comunidades planctónicas y microbioma marino, y el análisis de la expresión génica y adaptaciones evolutivas de organismos expuestos al frío extremo del continente antártico.",
+
+            "Sistema Autónomo Ferrybox (UACh)": "El FerryBox I es un dispositivo autónomo de flujo continuo que colecta de forma sistemática y en tiempo real datos sobre las propiedades físicas, químicas y biológicas de las aguas superficiales marinas. El equipo se conecta a la toma de agua de mar del buque y la bombea a través de un circuito interno con múltiples sensores protegidos de la luz y de las inclemencias del tiempo. Registra de forma continua variables fundamentales de la capa superficial del océano como salinidad, temperatura, turbidez, oxígeno disuelto, pH y concentración de clorofila-a.\n\nAunque actualmente se encuentra en estado inactivo, el propósito científico de esta plataforma es el monitoreo ambiental continuo a gran escala y la creación de series temporales de datos oceanográficos superficiales. Al integrarse en embarcaciones que realizan tránsitos regulares por los fiordos y canales de la Macrozona Austral, permite estudiar la variabilidad espacial de las plumas de agua dulce de origen glacial, la productividad primaria marina y el comportamiento de las masas de agua costeras frente a forzantes climáticos.",
+
+            "Perfilador de Viento y Temperatura Vertical SODAR-RASS": "El Scintec XFAS-RAE1 es un instrumento meteorológico terrestre de teledetección activa instalado en el Campus Patagonia de la UACh en Coyhaique que mide de forma continua perfiles verticales de viento y temperatura en la baja atmósfera (capa límite atmosférica). El componente SODAR (Sonic Detection and Ranging) emite pulsos acústicos directivos hacia arriba y analiza el eco Doppler dispersado por las turbulencias de densidad térmica del aire para calcular la velocidad y dirección del viento tridimensional a diferentes alturas (hasta 2,000 m). Paralelamente, el componente RASS (Radio Acoustic Sounding System) emite ondas de radio electromagnéticas de alta frecuencia para medir la velocidad de propagación de los frentes de ondas sonoras en el aire, deduciendo con alta precisión el perfil vertical de temperatura virtual.\n\nEste perfilador atmosférico es fundamental para la caracterización micrometeorológica y el análisis de la estabilidad atmosférica en el valle de Coyhaique y la Patagonia central. Permite cuantificar cizalladuras de viento (variación brusca de velocidad o dirección), detectar alturas de capas de inversión térmica, y evaluar la estructura de la turbulencia del viento. Sus aplicaciones principales incluyen el estudio de la dispersión de contaminantes atmosféricos en valles fluviales de la Patagonia, la evaluación del potencial de recursos eólicos y la seguridad meteorológica para la aeronavegación regional.",
+
+            "Plataforma de Microscopía Avanzada Miras Magallanes": "Esta plataforma de microscopía avanzada integra tres sistemas ópticos y electrónicos Zeiss: un microscopio electrónico de barrido (SEM EVO 15), un microscopio óptico invertido de investigación (Axio Observer 7) y un estereomicroscopio con zoom de alta resolución (Axio Zoom.V16). El SEM EVO 15 funciona enfocando un haz de electrones acelerados sobre la muestra, detectando señales resultantes (electrones secundarios y retrodispersados) para generar imágenes ultra-detalladas de la topografía y morfología superficial con alta profundidad de campo, además de incorporar un detector de espectroscopía de rayos X por dispersión de energía (EDX) para análisis químico elemental cualitativo y cuantitativo. Los microscopios ópticos Axio Observer y Axio Zoom complementan estas capacidades permitiendo la observación en campo claro y fluorescencia de muestras biológicas y materiales a diversas escalas de aumento.\n\nEl propósito de la plataforma es ofrecer capacidades de análisis estructural y químico multiescala para la investigación científica e industrial en la Patagonia. Sus aplicaciones abarcan la taxonomía y morfología de microalgas, artrópodos y otros especímenes biológicos, el análisis micropaleontológico de sedimentos glaciares, la caracterización de fallas en materiales y componentes metalúrgicos, y el estudio de nanoestructuras en física aplicada y geología.",
+
+            "Espectrómetro RMN de Sobremesa": "El Nanalysis 100PRO es un espectrómetro de Resonancia Magnética Nuclear (RMN) de sobremesa multinuclear que opera a una frecuencia de 100 MHz para protones (1H). Utiliza un potente imán permanente de neodimio que no requiere helio líquido ni nitrógeno líquido para su enfriamiento, lo que reduce drásticamente el mantenimiento y facilita su uso directo en mesones de laboratorio. Funciona alineando los espines nucleares de muestras líquidas en tubos estándar de 5 mm y perturbándolos con pulsos de radiofrecuencia para registrar las señales de precesión electromagnética, generando espectros moleculares que revelan el entorno químico de los núcleos de hidrógeno (1H) y carbono (13C).\n\nEl equipo tiene como propósito científico la elucidación estructural y la cuantificación química no destructiva de compuestos orgánicos. Es una herramienta poderosa para caracterizar metabolitos secundarios de plantas patagónicas, monitorear la síntesis de nuevos compuestos químicos, analizar la composición de combustibles, aceites y alimentos, y realizar estudios de control de calidad. Su software permite programar experimentos avanzados en una y dos dimensiones (1D, COSY, DEPT, HSQC, HMBC) para resolver estructuras moleculares complejas de forma rápida.",
+
+            "Analizador de Carbono Orgánico Total y Nitrógeno Total (UMAG)": "Este es un sistema automatizado avanzado diseñado para determinar carbono orgánico total (TOC), carbono inorgánico total (TIC) y nitrógeno total (TNb) en una amplia gama de matrices líquidas y sólidas. El equipo utiliza un horno de combustión catalítica de alta temperatura que trabaja de forma estándar a 950°C, asegurando la descomposición térmica completa incluso de compuestos altamente estables o que contienen partículas en suspensión. El CO2 liberado es detectado y cuantificado por un detector infrarrojo no dispersivo (NDIR) con tecnología de enfoque de radiación, y el nitrógeno se cuantifica mediante un detector de quimioluminiscencia o de conductividad térmica para óxidos de nitrógeno.\n\nSu diseño modular incluye un accesorio de sólidos (HT 1300), lo que permite conmutar de manera automatizada entre el análisis de muestras de agua (ríos, lagos, estuarios) y muestras sólidas como suelos, sedimentos y lodos. Las aplicaciones principales son el análisis de carbono orgánico y nitrógeno en sedimentos lacustres e intermareales, el estudio de la dinámica de nutrientes del suelo y el agua, y el monitoreo de la calidad ambiental en ecosistemas prístinos y zonas de impacto antrópico de la Región de Magallanes.",
+
+            "Plataforma de Estaciones Eddy Covariances": "Esta plataforma está conformada por una red de instrumentación micrometeorológica de alta frecuencia compuesta por analizadores de gases de circuito cerrado para dióxido de carbono y vapor de agua (LI-COR LI-7200RS), analizadores de circuito abierto para metano (LI-COR LI-7700), sistemas automáticos de flujo de CO2 en suelo (LI-COR LI-8100A) y anemómetros acústicos tridimensionales (Campbell Scientific). El sistema funciona registrando a altas velocidades (típicamente 10 a 20 mediciones por segundo) las fluctuaciones verticales del viento y la concentración instantánea de los gases de efecto invernadero en la atmósfera.\n\nEl objetivo científico de la plataforma es la cuantificación directa de los flujos netos de intercambio de carbono (CO2, CH4) y agua (evapotranspiración) a escala de ecosistema entre la superficie terrestre y la atmósfera baja. Se aplica en la investigación de turberas, bosques templados húmedos y estepas de la Patagonia austral para determinar si estos ecosistemas se comportan como sumideros o fuentes de carbono en el contexto del cambio climático global. Los sistemas LI-8100A complementan esto midiendo la respiración del suelo para entender los procesos biológicos subterráneos.",
+
+            "Embarcación Sur-Austral": "La Sur-Austral es una embarcación de investigación costera y científica de tamaño medio, acondicionada específicamente para navegar en el intrincado sistema de fiordos, canales y estuarios de la Patagonia central (con base en Caleta Tortel). Sirve como una plataforma logística y científica móvil que permite a los investigadores acceder a zonas remotas y de difícil acceso geográfico para la recolección de muestras y el despliegue de instrumentación oceanográfica.\n\nLa embarcación está equipada con pescantes y huinches hidráulicos que facilitan el fondeo y recuperación segura de muestreadores de sedimento (coreadores, dragas), botellas oceanográficas Niskin para recolectar agua a diferentes profundidades, y redes de plancton. Es el pilar fundamental para las campañas regulares de monitoreo del sistema marino estuarino de la Patagonia, permitiendo estudiar el acoplamiento físico-químico y biológico entre los aportes terrestres de los ríos y glaciares y la productividad del ecosistema marino adyacente.",
+
+            "Imaging FlowCytobot": "El Imaging FlowCytobot (IFCB) es un instrumento oceanográfico sumergible y totalmente automatizado que combina la citometría de flujo con la captura microscópica de imágenes de alta resolución. Funciona succionando continuamente muestras de agua de mar y pasándolas a través de un capilar microscópico. A medida que las partículas de fitoplancton pasan frente a un haz de láser, la fluorescencia emitida por la clorofila o la dispersión de la luz activan una cámara CCD de alta resolución y un flash de luz LED para capturar instantáneamente una microfotografía de cada organismo (de entre 10 y 150 micrones de tamaño).\n\nEl propósito científico del equipo es la monitorización in situ, continua y a largo plazo de las comunidades microalgalas en el océano, operando de forma autónoma a profundidades de hasta 40 metros. Genera bases de datos masivas de imágenes de fitoplancton que son analizadas mediante algoritmos de inteligencia artificial para clasificar e identificar las especies presentes. Sus aplicaciones principales incluyen el estudio de la ecología de comunidades marinas, la detección temprana y en tiempo real de especies causantes de Floraciones Algales Nocivas (FAN/mareas rojas), y el análisis de la respuesta fitoplanctónica a variaciones de temperatura y salinidad en los fiordos patagónicos.",
+
+            "Microscopio Electrónico de Barrido con Detectores y Sensor EDX": "Este microscopio electrónico de barrido (SEM, por sus siglas en inglés) de la serie Zeiss EVO 15 es un instrumento de caracterización microestructural de alta gama. Funciona acelerando electrones en una columna de vacío y enfocándolos en un haz extremadamente fino sobre la superficie de una muestra. Mediante una serie de detectores avanzados (detector de electrones secundarios SE, detector de electrones retrodispersados de alta definición HDBSE, y detector de presión variable C2D) captura la señal electrónica reflejada, reconstruyendo imágenes bidimensionales de alta resolución de la topografía y el contraste de densidad de la muestra. Incorpora además un espectrómetro de rayos X por dispersión de energía (EDX), el cual detecta los rayos X característicos emitidos por los átomos de la muestra al ser impactados por el haz de electrones, permitiendo identificar y cuantificar los elementos químicos presentes en áreas microscópicas puntuales.\n\nEl propósito principal del equipo en el contexto del museo es la investigación, conservación y análisis forense de bienes patrimoniales, piezas arqueológicas e hitos paleontológicos de la Región de Aysén. Permite analizar la microestructura de fósiles, huesos antiguos, textiles arqueológicos y herramientas de piedra sin comprometer su integridad estructural, identificando composiciones de pigmentos antiguos, procesos de alteración mineralógicos e identificando trazas de manufactura. Es un puente tecnológico entre el pasado bio-cultural de la Patagonia y la ciencia analítica moderna.",
+
+            "Analizador Elemental Carbono Nitrógeno": "El Velp CN 802 es un analizador elemental completamente automatizado para la determinación cuantitativa de carbono total (TC) y nitrógeno total (TN) en muestras agropecuarias sólidas, líquidas y pastosas. Opera bajo el método Dumas de combustión rápida, donde la muestra es sometida a una descomposición térmica completa a temperaturas superiores a los 1000°C en presencia de oxígeno puro. Los productos gaseosos resultantes de la combustión son purificados mediante un sistema de trampas físicas y químicas (tecnología DriStep para remoción de agua), midiéndose el carbono elemental mediante un detector de infrarrojo no dispersivo (NDIR) y el nitrógeno gaseoso purificado a través de un detector de conductividad térmica (TCD) de alta precisión.\n\nEste equipo está destinado a la investigación y el diagnóstico de la fertilidad de suelos, la calidad nutricional de forrajes y la composición de fertilizantes o enmiendas orgánicas en los sistemas productivos de la Patagonia. Permite procesar de forma rápida hasta 117 muestras secuenciales por corrida usando portagases alternativos (helio o argón), proporcionando la relación Carbono/Nitrógeno (C/N), que es un indicador clave de la descomposición de la materia orgánica, la salud biológica del suelo y la eficiencia del nitrógeno en la nutrición de cultivos y praderas de zonas frías.",
+
+            "Equipo Generador de Nitrógeno Líquido": "Este equipo es un sistema autónomo de generación y licuefacción de nitrógeno gaseoso de alta pureza a partir de aire ambiente. El proceso se inicia filtrando y comprimiendo el aire atmosférico, el cual luego pasa a través de columnas de carbón molecular activo bajo el principio de adsorción por oscilación de presión (PSA) para remover el oxígeno, vapor de agua y dióxido de carbono, aislando nitrógeno con una pureza superior al 99%. Este nitrógeno gaseoso purificado entra posteriormente a un criogenerador basado en un ciclo cerrado de refrigeración por helio que enfría el gas hasta su punto de ebullición (-196°C), licuándolo y almacenándolo en un termo de almacenamiento integrado y aislado al vacío.\n\nEl propósito de este equipo en los laboratorios de reproducción animal del INIA es asegurar un suministro constante y autosuficiente de nitrógeno líquido. Esto es esencial para el mantenimiento y conservación a largo plazo de colecciones de recursos zoogenéticos e investigación de criopreservación en zonas aisladas, donde el transporte regular de gases licuados desde las grandes urbes es logísticamente complejo o inviable.",
+
+            "Ice Cube 14, Congelador Automático de Semen": "El IceCube 14 es un congelador biológico programable y controlado por computadora, optimizado para la congelación a tasas controladas de muestras biológicas contenidas en pajuelas o viales. El sistema funciona inyectando vapores de nitrógeno líquido (LN2) dentro de una cámara de congelación aislada térmicamente mediante una turbina que asegura una distribución homogénea de la temperatura. Un microcontrolador de alta velocidad monitorea continuamente la temperatura de la cámara y de las muestras mediante sensores de platino, ajustando con precisión la inyección de nitrógeno para seguir rampas de enfriamiento programadas desde +40°C hasta -180°C con tasas de enfriamiento sumamente precisas (de 0.01 a 60°C por minuto).\n\nEste equipo es vital para la preservación exitosa de la viabilidad celular de espermatozoides y embriones de rumiantes (principalmente ovinos y bovinos) durante el proceso de congelación. La capacidad de programar curvas térmicas personalizadas evita el daño por shock térmico y minimiza la formación dañina de cristales de hielo intracelulares durante la transición de fase líquida a sólida. Se aplica en el mejoramiento genético animal, biotecnología reproductiva y en el banco de recursos zoogenéticos de la Macrozona Austral.",
+
+            "MMP Uno, Envasadora y Selladora Automáticas de Pajuelas": "La MPP Uno es una máquina electromecánica totalmente automatizada diseñada para el llenado y sellado de pajuelas de semen de 0.25 y 0.5 mililitros bajo condiciones higiénicas estrictas. El equipo opera mediante un sistema de succión de vacío controlado que extrae dosis específicas de semen diluido desde un depósito y las introduce en las pajuelas plásticas de forma rápida (en fracciones de segundo). Inmediatamente después del llenado, una unidad de soldadura por ultrasonidos sella herméticamente los extremos de la pajuela mediante vibración de alta frecuencia, asegurando un sellado confiable sin generar calor que pudiese dañar la viabilidad de los espermatozoides.\n\nEl equipo permite envasar hasta 4,000 pajuelas por hora, automatizando un proceso crítico de los laboratorios de reproducción asistida y bancos de germoplasma. Garantiza la estandarización y uniformidad en el volumen de las dosis de semen destinadas a la inseminación artificial o criopreservación, reduciendo al mínimo la contaminación cruzada y los tiempos de procesamiento de los eyaculados antes de ingresar al congelador biológico.",
+
+            "Sistema C.A.S.A. Software Análisis de Semen": "El sistema C.A.S.A. (Computer-Assisted Semen Analysis) SpermVision es una plataforma digital de diagnóstico microscópico automatizado de la calidad seminal. Consiste en una cámara digital de alta velocidad montada en un microscopio óptico de contraste de fases provisto de una platina termorregulada, conectada a un computador con software de análisis de imagen propietario. El software captura secuencias de video en tiempo real de los espermatozoides móviles, identificando individualmente a cada célula para rastrear su trayectoria de movimiento a altas frecuencias de fotogramas, calculando de forma objetiva la concentración espermática, la movilidad total y progresiva, y parámetros cinéticos específicos como la velocidad curvilínea, velocidad de trayectoria promedio y amplitud del desplazamiento lateral de la cabeza.\n\nSu propósito científico es eliminar la subjetividad inherente a la evaluación visual clásica al microscopio del semen de animales de producción (principalmente carneros y toros). Se utiliza en la investigación de fisiología reproductiva, en la evaluación de la calidad de eyaculados post-descongelación y en la optimización de las dosis de inseminación artificial. Facilita la generación de informes detallados y reproducibles con fines de investigación genética ganadera en la Patagonia.",
+
+            "Estación Meteorológica Automática": "Esta estación meteorológica automática está equipada con un registrador de datos (datalogger) profesional Thies Clima modelo DL16 Pro, diseñado bajo recomendaciones de la Organización Meteorológica Mundial (OMM) para la adquisición continua y el procesamiento en tiempo real de múltiples variables ambientales. El equipo cuenta con 16 canales multifunción de entrada programables capaces de registrar señales analógicas, digitales y de frecuencia provenientes de un ensamble de sensores meteorológicos de alta precisión. Registra simultáneamente velocidad y dirección del viento, temperatura y humedad relativa del aire, precipitación acumulada, presión atmosférica y radiación solar global y neta.\n\nEl datalogger DL16 Pro almacena localmente los datos con estampas de tiempo de alta resolución y cuenta con capacidades de comunicación serie y Ethernet para la transmisión remota de datos (telemetría). Su propósito científico en la Estación Patagonia UC (Bahía Exploradores, Aysén) es la caracterización micrometeorológica continua y el monitoreo climático de largo plazo en el sistema estuarino y forestal de la cuenca del Río Exploradores. Proporciona datos fundamentales para evaluar el balance hídrico local, las tendencias de variación microclimática, las tasas de precipitación y la respuesta de los ecosistemas patagónicos frente al cambio climático global."
+        };
+
+        function getScientificDescription(title, inst, brand) {
+            const normalize = (str) => (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const t = normalize(title);
+            const i = normalize(inst);
+            const b = normalize(brand);
+
+            if (t.includes("fuerzas atomicas") || t.includes("afm")) return SCIENTIFIC_DESCRIPTIONS["Microscopio de Fuerzas Atómicas"];
+            if (t.includes("seahorse")) return SCIENTIFIC_DESCRIPTIONS["Analizador Metabólico Seahorse XF Pro"];
+            if (t.includes("cytek") || t.includes("aurora") || t.includes("flujo espectral")) return SCIENTIFIC_DESCRIPTIONS["Citómetro de Flujo Espectral Cytek Aurora"];
+            if (t.includes("dron") || t.includes("tetracam") || t.includes("microdrones")) return SCIENTIFIC_DESCRIPTIONS["Dron Multiespectral"];
+            if (t.includes("luz transmitida") || (t.includes("leica") && t.includes("tl"))) return SCIENTIFIC_DESCRIPTIONS["Base de Luz Transmitida LED"];
+            if (t.includes("dionex") || (t.includes("cromatografo") && t.includes("ionico"))) return SCIENTIFIC_DESCRIPTIONS["Cromatógrafo Iónico Dionex"];
+            if (t.includes("chn") || (t.includes("microanalizador") && t.includes("carbono"))) return SCIENTIFIC_DESCRIPTIONS["Microanalizador de Carbono, Nitrógeno e Hidrógeno"];
+            if (t.includes("aqualog") || t.includes("espectrofluorimetro")) return SCIENTIFIC_DESCRIPTIONS["Espectrofluorímetro Aqualog"];
+            if (t.includes("lander") || t.includes("multiparametrica subsuperficial")) return SCIENTIFIC_DESCRIPTIONS["Plataforma Oceanográfica Multiparamétrica Subsuperficial"];
+            if (t.includes("ferrybox")) {
+                if (i.includes("uach")) return SCIENTIFIC_DESCRIPTIONS["Sistema Autónomo Ferrybox (UACh)"];
+                return SCIENTIFIC_DESCRIPTIONS["Sistema Autónomo Ferrybox (INACH)"];
+            }
+            if (t.includes("microtomografo") || t.includes("skyscan") || t.includes("micro ct")) return SCIENTIFIC_DESCRIPTIONS["Microtomógrafo de Rayos X Micro CT"];
+            if (t.includes("glider") || t.includes("seaexplorer")) return SCIENTIFIC_DESCRIPTIONS["Glider"];
+            if (t.includes("secuenciacion") || t.includes("viel")) return SCIENTIFIC_DESCRIPTIONS["Plataforma de Secuenciación Genética a Bordo del AP Almirante Viel"];
+            if (t.includes("sodar") || t.includes("rass") || t.includes("perfilador de viento")) return SCIENTIFIC_DESCRIPTIONS["Perfilador de Viento y Temperatura Vertical SODAR-RASS"];
+            if (t.includes("miras magallanes") || (t.includes("microscopia avanzada") && i.includes("umag"))) return SCIENTIFIC_DESCRIPTIONS["Plataforma de Microscopía Avanzada Miras Magallanes"];
+            if (t.includes("rmn") || t.includes("nmr100pro") || t.includes("nanalysis")) return SCIENTIFIC_DESCRIPTIONS["Espectrómetro RMN de Sobremesa"];
+            if (t.includes("carbono organico") || t.includes("toc")) {
+                if (i.includes("umag")) return SCIENTIFIC_DESCRIPTIONS["Analizador de Carbono Orgánico Total y Nitrógeno Total (UMAG)"];
+                return SCIENTIFIC_DESCRIPTIONS["Analizador de Carbono Orgánico Total y Nitrógeno Total (CIEP)"];
+            }
+            if (t.includes("eddy") || t.includes("covariances")) return SCIENTIFIC_DESCRIPTIONS["Plataforma de Estaciones Eddy Covariances"];
+            if (t.includes("sur-austral") || t.includes("embarcacion")) return SCIENTIFIC_DESCRIPTIONS["Embarcación Sur-Austral"];
+            if (t.includes("ifcb") || t.includes("flowcytobot")) return SCIENTIFIC_DESCRIPTIONS["Imaging FlowCytobot"];
+            if (t.includes("zeiss") && (t.includes("museo") || i.includes("museo") || t.includes("edx"))) return SCIENTIFIC_DESCRIPTIONS["Microscopio Electrónico de Barrido con Detectores y Sensor EDX"];
+            if (t.includes("cn 802") || (t.includes("elemental carbono") && (i.includes("inia") || b.includes("velp")))) return SCIENTIFIC_DESCRIPTIONS["Analizador Elemental Carbono Nitrógeno"];
+            if (t.includes("generador") && t.includes("nitrogeno liquido")) return SCIENTIFIC_DESCRIPTIONS["Equipo Generador de Nitrógeno Líquido"];
+            if (t.includes("ice cube") || t.includes("icecube") || t.includes("congelador")) return SCIENTIFIC_DESCRIPTIONS["Ice Cube 14, Congelador Automático de Semen"];
+            if (t.includes("mmp uno") || t.includes("mpp uno") || t.includes("envasadora") || t.includes("pajuelas")) return SCIENTIFIC_DESCRIPTIONS["MMP Uno, Envasadora y Selladora Automáticas de Pajuelas"];
+            if (t.includes("c.a.s.a") || t.includes("casa") || t.includes("spermvision") || t.includes("analisis de semen")) return SCIENTIFIC_DESCRIPTIONS["Sistema C.A.S.A. Software Análisis de Semen"];
+            if (t.includes("estacion meteorologica") || t.includes("thies") || t.includes("datalogger")) return SCIENTIFIC_DESCRIPTIONS["Estación Meteorológica Automática"];
+
+            for (const [key, desc] of Object.entries(SCIENTIFIC_DESCRIPTIONS)) {
+                const normKey = normalize(key);
+                if (t.includes(normKey) || normKey.includes(t)) {
+                    return desc;
+                }
+            }
+
+            return "-";
+        }
+
+        let allEquipmentData = [];
+        let filteredData = [];
+        let mapInstance = null;
+        let markersLayerGroup = null;
+        let selectedEquipment = null;
+
+        /* ==========================================================================
+           INITIALIZATION & MAP CREATION (CartoDB Positron Light)
+           ========================================================================== */
+        document.addEventListener('DOMContentLoaded', () => {
+            initLeafletMap();
+            fetchLiveDataset(false);
+        });
+
+        function initLeafletMap() {
+            mapInstance = L.map('map-canvas', {
+                center: [-49.0, -71.5],
+                zoom: 5,
+                zoomControl: false,
+                minZoom: 3,
+                maxZoom: 18
+            });
+
+            L.control.zoom({ position: 'topleft' }).addTo(mapInstance);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/" target="_blank" style="color: #5A6578;">CARTO</a> &copy; OpenStreetMap contributors',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(mapInstance);
+
+            markersLayerGroup = L.markerClusterGroup({
+                maxClusterRadius: 35,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                spiderLegPolylineOptions: { weight: 1.5, color: '#1E327B', opacity: 0.5 },
+                iconCreateFunction: function(cluster) {
+                    const count = cluster.getChildCount();
+                    return L.divIcon({
+                        html: `<div class="cluster-badge-nodo">${count}</div>`,
+                        className: 'custom-cluster-icon',
+                        iconSize: L.point(34, 34),
+                        iconAnchor: [17, 17]
+                    });
+                }
+            });
+            mapInstance.addLayer(markersLayerGroup);
+        }
+
+        /* ==========================================================================
+           RESPALDO CSV LOCAL (Contingencia offline / protocolo file:///)
+           ========================================================================== */
+        const LOCAL_CSV_BACKUP = `Nombre de quien completa este formulario,Correo,"Nombre del Equipamiento: (Ej: Cromatógrafo de Gases, Glider Submarino, etc)",Institución Responsable,Año de Adjudicación,Año de puesta en marcha,"Fuente de Financiamiento (en caso de no encontrarse su opción en el listado, por favor especificar el tipo de Financiamiento en la Opción ""Otro""","Costo de Adquisición (CLP) 
+Formato $XX.XXX.XXX","Ubicación Física: (Laboratorio/Campus, Comuna y Región)","Coordenadas (Latitud, Longitud)",Marca y Modelo,"Categoría Técnica: (Por ejemplo: Cromatografía, Microscopía, Espectrometría, Oceanografía, Genética, entre otros)",Categoría OCDE de Conocimiento,Estado Actual,"Por favor indicar la última fecha de uso conocido (mes, año)",Personal Técnico: ¿Cuenta con un profesional o técnico responsable de la operación del equipamiento en la institución?,Limitantes Operativas: ¿Cuenta el equipamiento con alguna limitante para su uso actualmente?,Mantenimiento: ¿Cuál es el esquema de mantenimiento vigente para este activo?,"Producción Científica Asociada: ¿Existen publicaciones WoS/Scopus derivadas del uso de este equipo? (Si es el caso, por favor dejar el DOI, nombre del artículo o académico que haya realizado investigaciones con el equipo)",Modelo de Acceso: ¿El equipamiento está disponible para uso compartido con otras instituciones del Nodo?,Modelo de Costo: ¿Como se financia el uso del equipamiento? 
+,,MICROSCOPIO DE FUERZAS ATÓMICAS,Universidad de Aysén,2021,,ANID - FONDEQUIP Mediano/Mayor,"$399,976,300.00","Laboratorio de Microscopía de Fuerza Atómica, Campus Lillo 2 (Obispo Lillo #697), Coyhaique, Región de Aysén","-45.5768, -72.0708",Asylum Research / Infinity BIO,Microscopios y Difractómetros,Ciencias Naturales / Ciencias Físicas,,,,,,,,
+,,SEAHORSE XF PRO,Universidad de Aysén,2024,2025,ANID - FONDEQUIP Mediano/Mayor,"$385,828,729.00","Laboratorio de Fisiología Celular y Metabolismo, Campus Lillo 1 (Eusebio Lillo #667), Coyhaique, Región de Aysén","-45.5766, -72.0705",Agilent / XF Pro,Instrumentos Bioanalíticos,Ciencias Naturales / Ciencias Biológicas,Activo,"junio, 2026",Sí,El equipamiento está operativo sin limitantes,Garantía del fabricante: El equipo está cubierto por la garantía original de compra.,,"Sí, bajo convenio",Sin costo: Uso abierto mediante colaboración científica.
+,,CYTEK™ AURORA,Universidad de Aysén,2023,,ANID - FONDEQUIP Mediano/Mayor,"$353,537,765.00","Laboratorio de Morfotoxicología, Campus Lillo 1 (Eusebio Lillo #667), Coyhaique, Región de Aysén","-45.5764, -72.0703",Cytek® Biosciences / 3 Laser V/B/R 383 canales,Otros,Ciencias Naturales / Ciencias Biológicas,,,,,,,,
+,,DRONE MULTIESPECTRAL,Universidad de Aysén,2017,,ANID - FONDEQUIP Mediano/Mayor,"$156,519,302.00","Dirección de Investigación, Campus Lillo 1 (Eusebio Lillo #667), Coyhaique, Región de Aysén","-45.5762, -72.0701",Microdrones / MD4-1000 / Tetracam Macaw-T,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,,,,,,,,
+Soraya Villagrán,soraya.villagran@ciep.cl,Cromatografo Iónico Dionex ,Centro de Investigación en Ecosistemas de la Patagonia,2011,2012,ANID - FONDEQUIP Mediano/Mayor,"$59,275,984.00","Laboratorio CIEP, Edificio Alto Baguales, Coyhaique, Región de Aysén","-45.5088, -72.1119",Dionex Modelo ICS-5000,Cromatógrafos y Espectrómetros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,10 de junio 2026 (se usa normalmente todos los días),Sí,El equipamiento está operativo sin limitantes,Personal interno: El mantenimiento lo realiza personal técnico especializado de la propia institución.,https://doi. org/10.1038/s41598-026-58131-8;  https://doi.org/10.1016/j.pocean.2023.102982;  https://doi.org/10.3389/fmars.2024.1396570,"Sí, bajo convenio",Recuperación de insumos: Solo se cobran los materiales gastables utilizados.
+Soraya Villagrán,soraya.villagran@ciep.cl,"Microanalizador de Carbono, Nitrógeno e Hidrógeno",Centro de Investigación en Ecosistemas de la Patagonia,2022,2023,ANID - FONDEQUIP Mediano/Mayor,"$85,263,500.00","Laboratorio CIEP, Edificio Alto Baguales, Coyhaique, Región de Aysén","-45.5086, -72.1117",Leco Modelo Truspec CHN Micro,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,05-06-2026 (se usa normalmente todos los días),Sí,El equipamiento está operativo sin limitantes,Contrato de servicio técnico: Existe un pago anual a un proveedor externo para mantenciones preventivas/correctivas.,"https://www.mdpi.com/2073-445X/14/5/1081\nhttps://www.sciencedirect.com/science/article/pii/S2666719325000263?via%3Dihub\nhttps://www.sciencedirect.com/science/article/pii/S2666719324001298?via%3Dihub\nhttps://ciep.cl/inicio/2025/08/04/aspectos-bromatologicos-de-bosques-patagonicos/","Sí, bajo convenio",Recuperación de insumos: Solo se cobran los materiales gastables utilizados.
+Soraya Villagrán,soraya.villagran@ciep.cl,Analizador Carbono Orgánico Total y Nitrógeno Total ,Centro de Investigación en Ecosistemas de la Patagonia,2022,2023,ANID - FONDEQUIP Mediano/Mayor,"$72,790,701.00","Laboratorio CIEP, Edificio Alto Baguales, Coyhaique, Región de Aysén","-45.5084, -72.1115",Shimadzu modelo TOC-LCPH-FA,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,10-06-2026 (se usa normalmente todos los días),Sí,El equipamiento está operativo sin limitantes,Contrato de servicio técnico: Existe un pago anual a un proveedor externo para mantenciones preventivas/correctivas.,https://doi.org/10.1038/s41598-026-58650-4,"Sí, bajo convenio",Recuperación de insumos: Solo se cobran los materiales gastables utilizados.
+Soraya Villagrán,soraya.villagran@ciep.cl,Espectrofluorímetro Aqualog ,Centro de Investigación en Ecosistemas de la Patagonia,2022,2023,ANID - FONDEQUIP Mediano/Mayor,"$113,016,744.00","Laboratorio CIEP, Edificio Alto Baguales, Coyhaique, Región de Aysén","-45.5082, -72.1113",Horiba modelo Aqualog-UV-800-C ,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,11-05-2026,Sí,Falta de mantenimiento preventivo,Garantía del fabricante: El equipo está cubierto por la garantía original de compra.,,"Sí, bajo convenio",Recuperación de insumos: Solo se cobran los materiales gastables utilizados.
+,,PLATAFORMA OCEANOGRÁFICA MULTIPARAMÉTRICA SUBSUPERFICIAL,Instituto Antártico Chileno,2024,,ANID - FONDEQUIP Mediano/Mayor,"$906,829,750.00","Anclaje Béntico Submarino, Bahía Chile (Isla Greenwich, Base Prat) y Bahía Sur (Isla Doumer, Base Yelcho), Territorio Chileno Antártico","-62.4817, -59.6303",MTE RBR ProOceanus Nortek McLane Sonardyne /  MTE Lander Aural concerto CTD ODO Tri CO2 Pro CV Signature500 ROCSI,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,En fase de instalación / puesta en marcha (2025-2026),Sí. Francisco Santa Cruz (Biólogo Marino/Oceanógrafo INACH) y equipo de terreno oceanográfico en alianza con SHOA y buzos científicos ECA.,Estacionalidad polar extrema; despliegue y mantenimiento condicionado a la ventana estival de la ECA; riesgo de arrastre por témpanos a la deriva.,"Mantenimiento preventivo anual en terreno durante el verano polar; calibración de fábrica de sensores CTD, pCO2 y ADCP entre campañas.","Baelde Jansen, D., González-Aravena, M., Santa Cruz, F., Cárdenas, C.A., et al. (Scientific Reports, 2026, DOI: 10.1038/s41598-026-49555-3); Mardones, M., Santa Cruz, F., Cárdenas, C., et al. (PLOS ONE, 2026, DOI: 10.1371/journal.pone.0322671).","Compartido a través del consorcio interinstitucional (INACH, IDEAL-UACh, BioPUC, CEAZA, SHOA, CADI-UMAG) y proyectos PROCIEN / ECA. Datos abiertos en CENDHOC.",Financiamiento basal institucional INACH + subsidio ANID FONDEQUIP Mayor 2024 ($906M) + soporte logístico y embarcado Armada de Chile.
+,,SISTEMA AUTÓNOMO FERRYBOX,Instituto Antártico Chileno,2024,,ANID - FONDEQUIP Mediano/Mayor,"$398,814,200.00","Buque Crucero Polar Magellan Explorer (Antarctica21) / Puerto Base: Muelle Capitán Prat, Punta Arenas, Región de Magallanes y de la Antártica Chilena","-53.1695, -70.9090",4H-Jena / FerryBox I,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,2024-2025,"Sí. Francisco Santa Cruz y Dr. César Cárdenas (INACH), con colaboración del Dr. Ricardo Giesecke (IDEAL-UACh) y tripulación de máquinas de Antarctica21.",Supeditado a las rutas y cronogramas de navegación del buque de turismo polar Magellan Explorer (Antarctica21) en temporada estival.,Lavados desincrustantes automáticos en puerto; calibración anual de sensores de conductividad/fluorometría con fabricante 4H-Jena.,"Giesecke, R., et al. (Science of the Total Environment, 2024, DOI: 10.1016/j.scitotenv.2024.170706). Monitoreo ambiental automatizado Ferrybox e integración en plataforma STARM (starm.cl).",Acceso abierto a los datos oceanográficos continuos (Open Data) para la comunidad científica del Nodo Ciencia Austral y redes polares internacionales (SOOS).,Alianza público-privada: navegación y energía aportada por Antarctica21; equipamiento y calibraciones cubiertos por FONDEQUIP EQM240009 ($398M).
+,,X-RAY MICROTOMOGRAPH MICRO CT ,Instituto Antártico Chileno,2023,,ANID - FONDEQUIP Mediano/Mayor,"$399,939,060.00","Laboratorios Antárticos Jorge Berguño, Lautaro Navarro 1245, Punta Arenas, Región de Magallanes y de la Antártica Chilena","-53.1654, -70.9075",Bruker / SkyScan 1273,Otros,Ciencias Naturales / Ciencias Biológicas,,En uso activo continuo (2025-2026),Sí. Dra. Cristine Trevisan (Paleobotánica INACH) y equipo de investigadores/técnicos de laboratorio formalmente capacitados por ingenieros de Bruker.,"Límite dimensional de muestras (hasta 500 mm × 300 mm, 20 kg); alta demanda de tiempo computacional para renderizado de vóxeles 3D de alta resolución.",Garantía de fábrica y servicio técnico especializado (Micro Photonics / Bruker); fuente de rayos X de microfoco sellada de bajo mantenimiento.,"Trevisan, C., et al. (Frontiers in Earth Science, 2023, DOI: 10.3389/feart.2023.1048754); Trevisan, C., et al. (Anais da Academia Brasileira de Ciências, 2023, DOI: 10.1590/0001-3765202320231268).","Acceso abierto regulado para investigadores del INACH, universidades del Nodo (UMAG, UAysén, UACh) y comunidad científica nacional previa solicitud de ficha de muestra.",Financiamiento basal INACH + FONDEQUIP Mediano 2023 ($399M). Costo marginal regulado por horas de escaneo/reconstrucción y consumibles para usuarios externos.
+,,GLIDER,Instituto Antártico Chileno,2022,,ANID - FONDEQUIP Mediano/Mayor,"$355,116,944.00","Taller Oceanográfico INACH, Lautaro Navarro 1245, Punta Arenas (Misiones en Paso Drake y Estrecho de Magallanes), Región de Magallanes y de la Antártica Chilena","-53.1654, -70.9075",Alseamar / SEAEXPLORER X2,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,,Misiones 2025-2026 (Misión Magallanes 001 y campañas polares),"Sí. Dra. Lorena Rebolledo (Coordinadora); Cristofer Huenchumán y Bastián Oyarce (Pilotos y técnicos certificados por Alseamar), junto a equipo oceanográfico INACH.",Requiere buque de apoyo para maniobras de botadura y rescate en mar abierto; riesgo de colisión con témpanos de hielo a la deriva; cobertura satelital Iridium.,"Protocolo de posmisión en laboratorio: desalado, pruebas de vacío en casco, recambio de sellos O-rings, sustitución de packs de litio y calibración de sensores Seabird.","Rebolledo, L., Bertrand, S., Lange, C.B., et al. (Progress in Oceanography, 2019, DOI: 10.1016/j.pocean.2018.12.004). Misión oceanográfica Glider Magallanes 001.",Disponible para misiones de investigación del Programa Nacional de Ciencia Antártica (PROCIEN) y transferencia tecnológica mediante talleres abiertos a universidades.,"Inversión inicial FONDEQUIP EQM220014 ($355M); costos de telemetría Iridium, baterías y logística de rescate financiados por presupuesto basal INACH / ECA."
+,,Plataforma de Secuenciación Genética para Investigación en Ecosistemas Antárticos a Bordo del AP Almirante Viel.,Instituto Antártico Chileno,2025,,ANID - FONDEQUIP Mediano/Mayor,"$156,668,673.00","Laboratorio Científico Embarcado, Rompehielos AP Almirante Viel (Base Invernal: Lautaro Navarro 1245, Punta Arenas), Península Antártica, Región de Magallanes y de la Antártica Chilena","-64.8000, -63.5000",TBD / TBD,Instrumentos Bioanalíticos,Ciencias Naturales / Ciencias Biológicas,Activo,En fase de puesta en marcha a bordo del buque Viel (2025-2026),Sí. Alejandro Font Mascareño (Biotecnólogo e investigador del Laboratorio de Biorrecursos Antárticos INACH) y equipo de bioanalistas moleculares.,Requiere cadena de frío estricta (-20°C) para kits enzimáticos a bordo; estabilidad física para micropipeteo en condiciones de oleaje polar.,Mantenimiento preventivo en estaciones computacionales GPU de basecalling (Guppy/Dorado); chequeo de calidad y número de poros activos en flow cells antes de cada corrida.,"Font-Mascareño, A., et al. (Vigilancia molecular in situ H5N1 y metagenómica antártica en rompehielos Viel; proyecto adjudicado 2025 en fase de puesta en marcha).",Uso dual: embarcado para grupos científicos a bordo del AP Almirante Viel durante comisiones polares y abierto en laboratorios de Punta Arenas el resto del año.,Financiamiento FONDEQUIP Mediano 2025 ($156M); los grupos de investigación externos aportan sus reactivos de preparación de librerías y celdas de flujo (MinION).
+-,-,FERRYBOX,Universidad Austral de Chile (UACh),2019,,ANID - FONDEQUIP Mediano/Mayor,,"Campus Patagonia, Universidad Austral de Chile, Coyhaique Alto Km 4, Coyhaique, Región de Aysén","-45.5586, -72.0305",4H - Jena / FerryBox I,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Inactivo,,No,Falta de mantenimiento posterior a un fallo,,,No,
+Fredy Salazar,fredy.salazar@uach.cl,PERFILARDOR DE VIENTO Y TEMPERATURA VERTICAL SODAR-RASS,Universidad Austral de Chile (UACh),2016,,ANID - FONDEQUIP Mediano/Mayor,"$137,597,893.00","Campus Patagonia, Universidad Austral de Chile, Coyhaique Alto Km 4, Coyhaique, Región de Aysén","-45.5584, -72.0303",SCINTEC / XFAS-RAE1,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo con restricciones,,,,,,,
+,,PLATAFORMA MICROSCOPÍA AVANZADA MIRAS MAGALLANES,Universidad de Magallanes,2021,,ANID - FONDEQUIP Mediano/Mayor,"$526,274,849.00","Unidad de Microscopía Avanzada, CADI-UMAG, Av. Los Flamencos 01364, Punta Arenas, Región de Magallanes y de la Antártica Chilena","-53.1222, -70.8962",ZEISS / microscopio electrónico de barrido ZEISS EVO 15 microscopio óptico invertido ZEISS Axio Observer 7 y microscopio con zoom ZEISS Axio Zoom.V16,Otros,Ciencias Naturales / Ciencias Biológicas,Activo,En uso activo continuo (2025-2026),Sí. Dr. Máximo Frangópulos Rivera (Director CADI-UMAG / Vicerrector VRIIP) y equipo técnico de microscopía avanzada capacitado por Carl Zeiss Chile.,"Preparación previa requerida para muestras biológicas (fijación química, deshidratación, punto crítico y metalizado oro/platino para SEM); desgasificación en alto vacío.",Contrato de mantenimiento preventivo y calibración óptica/electrónica con Carl Zeiss Chile; reposición periódica de filamentos de tungsteno y patrones de calibración EDX.,"Frangópulos, M., et al. (Progress in Oceanography, 2023, DOI: 10.1016/j.pocean.2023.102982); Frangópulos, M., et al. (Harmful Algae, 2011, DOI: 10.1016/j.hal.2011.10.029).","Acceso abierto reglamentado para la comunidad científica de la Macrozona Austral (UAysén, CIEP, INACH, INIA) y proyectos externos a través de la Unidad de Microscopía CADI.","Financiamiento basal ANID FONDEQUIP EQM210172 ($526M); tarifario por hora de sesión analítica (SEM-EDX, Axio Observer 7 o Axio Zoom) con cobro diferenciado institucional/externo."
+,,ESPECTROMETRO RMN DE SOBREMESA MODELO NMR100PRO1H13C DOBLE NUCLEO 1H/13C,Universidad de Magallanes,2021,,ANID - FONDEQUIP Mediano/Mayor,"$250,562,244.00","Laboratorio de Productos Naturales, CADI-UMAG (Av. Los Flamencos 01364) / Instituto de la Patagonia (Av. Bulnes 01890), Punta Arenas, Región de Magallanes y de la Antártica Chilena","-53.1220, -70.8960",Nanalysis Corp / C17882022,Cromatógrafos y Espectrómetros,Ciencias Naturales / Ciencias Químicas,Activo,En uso activo continuo (2025-2026),"Sí. Dr. Víctor Fajardo Morales (Profesor Titular y Director del Laboratorio de Productos Naturales UMAG), Dra. Dafne Díaz-Hernández y químicos analistas del laboratorio.","Sensibilidad y resolución limitada a 100 MHz (menor a equipos de 400-600 MHz); exige uso obligatorio de solventes deuterados (CDCl3, DMSO-d6) y pureza de extractos purificados.",Mantenimiento reducido al usar imán permanente de neodimio sin criógenos (sin recarga de helio/nitrógeno); calibración y shimming digital automatizado por software NMReady.,"Fajardo, V., et al. (Polish Polar Research, 2022, DOI: 10.24425/ppr.2022.140368); estudios fitoquímicos y alcaloides en Solanaceae patagónicas (Benthamiella azorella, FONDEQUIP EQM210006).","Disponible para grupos de investigación química, farmacológica, agronómica y biológica de la Macrozona Austral previa coordinación técnica con el Laboratorio de Productos Naturales.",Inversión inicial ANID FONDEQUIP EQM210006 ($250M); costo marginal por tubos de muestra y solventes deuterados para usuarios externos; cubierto por proyectos para investigadores UMAG.
+,,ANALIZADOR ELEMENTAL DE CARBONO ORGÁNICO TOTAL Y NITRÓGENO TOTAL,Universidad de Magallanes,2020,,ANID - FONDEQUIP Mediano/Mayor,"$163,845,801.00","Laboratorio de Biogeoquímica Ambiental (EBL), CADI-UMAG, Av. Los Flamencos 01364, Punta Arenas, Región de Magallanes y de la Antártica Chilena","-53.1218, -70.8958",EndressHauser Analytik Jena / Multi N/C 3100 Duo,Cromatógrafos y Espectrómetros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,En uso activo continuo (2025-2026),"Sí. Dra. Karla C. Martínez Cruz (Directora ARCA-UMAG / Profesora Asociada Depto. Cs. y Recursos Naturales), Dra. María S. Astorga, Dr. Armando Sepúlveda y equipo EBL-UMAG.",Exige pretratamiento de muestras (filtración y acidificación para TOC/TIC en líquidos; molienda fina y pesaje en microbalanza para sólidos); consumo continuo de gas O2 ultra puro.,Calibración con patrones primarios certificados KHP y sulfato de amonio; recambio periódico de tubos de combustión de cuarzo a alta temperatura (850°C-1300°C) y catalizadores de platino.,"Martínez-Cruz, K., et al. (Science of the Total Environment, 2022, DOI: 10.1016/j.scitotenv.2022.157485); Hoyos-Santillán, et al. (Global Change Biology, 2023, DOI: 10.1111/gcb.16666).","Servicio analítico abierto a investigadores de la Macrozona Austral, instituciones públicas (DGA, SMA, INACH, CIEP) y proyectos ambientales de turberas, lagos y suelos.","Inversión ANID FONDEQUIP EQM200213 ($163M); tarifario analítico por muestra procesada (TOC, TIC, TC y TNb en líquido o sólido) para reposición de catalizadores de platino y gases."
+,,PLATAFORMA ESTACIONES EDDY COVARIANCES,Universidad de Magallanes,2020,,ANID - FONDEQUIP Mediano/Mayor,-,"Red de Torres Eddy Covariance: Estación Parque Etnobotánico Omora (Puerto Williams, Isla Navarino) y Estación Turberas Pampa Guanaco (Tierra del Fuego), Región de Magallanes y de la Antártica Chilena","-54.9450, -67.6530",LI-COR  Campbell / LI-7200RSFT/LI-7900EF/LI-7700/LI-8100-M1,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,Monitoreo continuo en tiempo real (2025-2026),"Sí. Dr. Jorge Hoyos-Santillán (Director CIGA-UMAG) y Dr. Armando Sepúlveda-Jáuregui (Co-director), junto a ingenieros de terreno del CIGA, IEB y Centro Internacional Cabo de Hornos (CHIC).",Aislamiento geográfico de las torres en turberas de Tierra del Fuego y Parque Omora; escarcha y engelamiento de ópticas en invierno; suministro dependiente de paneles solares y generadores eólicos.,"Expediciones de terreno periódicas para limpieza de ópticas LI-COR LI-7200/LI-7700, recambio de desecantes, verificación de calibración con gases patrón CO2/CH4 y mantención de baterías.","Hoyos-Santillán, J., Sepúlveda-Jáuregui, A., Martínez-Cruz, K., et al. (Global Change Biology, 2023, DOI: 10.1111/gcb.16666); Sepúlveda-Jáuregui, et al. (Biogeosciences, 2018, DOI: 10.5194/bg-15-6299-2018).","Red abierta de monitoreo climático y balances de carbono; datos disponibles para redes globales (FLUXNET, AmeriFlux) y proyectos científicos del Nodo Ciencia Austral.","Financiamiento basal ANID FONDEQUIP EQM200198 ($221M); costos de logística de expedición y mantenimiento financiados por centros basales (CHIC, IEB) y proyectos FONDECYT regulares."
+Rodrigo Mansilla,,Embarcación Sur-Austral,COPAS Coastal,2012,,Otro,"$150,000,000.00","Estación Oceanográfica Caleta Tortel, Comuna de Tortel, Región de Aysén","-47.796, -73.535",-,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,JULIO 2026,Sí,El equipamiento está operativo sin limitantes,Contrato de servicio técnico: Existe un pago anual a un proveedor externo para mantenciones preventivas/correctivas.,,"Sí, bajo convenio",Tarifario público: Existe un valor estandarizado por hora/muestra.
+Rodrigo Mansilla,,IMAGING FLOWCYTOBOT IFCB,COPAS Coastal,2017,,ANID - FONDEQUIP Mediano/Mayor,"$219,463,142.00","Estación Oceanográfica Caleta Tortel, Comuna de Tortel, Región de Aysén","-47.7958, -73.5348",McLane instruments / Imaging FlowCytobot IFCB,Instrumentos Bioanaliticos,Ciencias Naturales / Ciencias Biológicas,Activo,JULIO 2026,Sí,Otro,Contrato de servicio técnico: Existe un pago anual a un proveedor externo para mantenciones preventivas/correctivas.,,"Sí, bajo convenio",Tarifario público: Existe un valor estandarizado por hora/muestra.
+Pier Barattini,pbarattini@inia.cl,ANALIZADOR ELEMENTAL CARBONO NITRÓGENO,Instituto de Investigaciones Agropecuarias,2024,2024,Otro,"$56,848,680.00","Predio Santa Elena, Km 6 Camino Santa Elena, Valle Simpson, Comuna de Coyhaique, Región de Aysén","-45.664, -72.081",Velp CN 802,Cromatografos Y Espectrometros,"Ciencias Agrícolas / Agricultura, Silvicultura y Pesca",Activo,junio 2026,Sí,El equipamiento está operativo sin limitantes,Garantía del fabricante: El equipo está cubierto por la garantía original de compra.,,"Sí, bajo convenio",Otro
+Leonardo Pérez B.,leonardo.perez@serpat.cl,"MICROSCOPIO ELECTRÓNICO DE BARRIDO CON SENSORES SE, HDBSE, C2D, Y ANÁLISIS DE ELEMENTOS FUNDAMENTALES POR DISPERSIÓN DE RAYOS X (EDX) ",Museo Regional de Aysén,2024,2025,Proyecto interno de conservación con recurso sectorial,"$240,000,000.00","Laboratorio de Microscopía Electrónica, Área de Colecciones (Subterráneo), Museo Regional de Aysén, Km 3 Camino Coyhaique Alto, Coyhaique, Región de Aysén","-45.5726, -72.0261",ZEISS EVO 15,Microscopios Y Difractometros,Humanidades / Historia y Arqueología,Activo,JULIO 2026,Sí,El equipamiento está operativo sin limitantes,"Personal interno: El mantenimiento lo realiza personal técnico especializado de la propia institución (es el mismo investigador residente del museo, paleontólogo quien opera y mantiene). Se requiere de mantenciones preventivas anuales por parte de Zeiss para extender la vida util del equipo (requiere financiación actualmente no disponible).","*En producción tres artículos.
+Tesis y trabajos en congresos nacionales e internacionales.","Sí, mediante un acuerdo de colaboración científica.
+Solicitudes debe canalizarse a través del siguiente formulario:
+https://docs.google.com/forms/d/1wVbnAAEpA_NSauq0VjJXOcXSNFm5-uV6b-qMgJvFNFY/viewform?edit_requested=true
+Se recomienda tomar contacto previo con el responsable del laboratorio a través del correo electrónico leonardo.perez@serpat.gob.cl
+Las solicitudes son evaluadas considerando la pertinencia del estudio en relación con las capacidades operativas del SEM, la disponibilidad en calendario, la vinculación con la región austral y la misión del MURAY, la cobertura de los insumos requeridos y la participación en las comunicaciones científicas derivadas del estudio.",Otro
+Marilyn Tapia M.,mtapia@inia.cl,EQUIPO GENERADOR NITROGENO LIQUIDO,Instituto de Investigaciones Agropecuarias,2023,2023,Gobierno Regional FIC / Fondo Regional para la Productividad y el Desarrollo,"$50,860,185.00","Laboratorio de Reproducción Ovina-Bovina, Banco de Recursos Zoogenéticos, Predio Santa Elena, Valle Simpson, Coyhaique, Región de Aysén","-45.6638, -72.0808",SHANGAI HENGCANG TECHNOLOGIC,Agropecuaria,Ciencias Agrícolas / Ciencias Animales y Lechería,Activo,JULIO 2026,Sí,El equipamiento está operativo sin limitantes,Personal interno: El mantenimiento lo realiza personal técnico especializado de la propia institución.,,"Sí, bajo convenio",Tarifario público: Existe un valor estandarizado por hora/muestra.
+Marilyn Tapia M.,mtapia@inia.cl,"ICE CUBE 14, CONGELADOR AUTOMATICO DE SEMEN",Instituto de Investigaciones Agropecuarias,2020,2022,Gobierno Regional FIC / Fondo Regional para la Productividad y el Desarrollo,"$32,076,750.00","Laboratorio de Reproducción Ovina-Bovina, Banco de Recursos Zoogenéticos, Predio Santa Elena, Valle Simpson, Coyhaique, Región de Aysén","-45.6636, -72.0806",MINITUBE,Agropecuaria,Ciencias Agrícolas / Ciencias Animales y Lechería,Activo,MAYO 2026,Sí,El equipamiento está operativo sin limitantes,Mantenimiento reactivo: No existe contrato vigente; se gestionan fondos ante fallos específicos.,,"Sí, bajo convenio",Tarifario público: Existe un valor estandarizado por hora/muestra.
+Marilyn Tapia M.,mtapia@inia.cl,"MMP UNO, ENVASADORA Y SELLADORA AUTOMATICAS DE PAJUELAS",Instituto de Investigaciones Agropecuarias,2020,2022,Gobierno Regional FIC / Fondo Regional para la Productividad y el Desarrollo,"$38,688,750.00","Laboratorio de Reproducción Ovina-Bovina, Banco de Recursos Zoogenéticos, Predio Santa Elena, Valle Simpson, Coyhaique, Región de Aysén","-45.6634, -72.0804",MINITUBE,Agropecuaria,Ciencias Agrícolas / Ciencias Animales y Lechería,Activo,MAYO 2026,Sí,El equipamiento está operativo sin limitantes,Mantenimiento reactivo: No existe contrato vigente; se gestionan fondos ante fallos específicos.,,"Sí, bajo convenio",Tarifario público: Existe un valor estandarizado por hora/muestra.
+Marilyn Tapia M.,mtapia@inia.cl,SISTEMA C.A.S.A. SOFTWARE ANALISIS DE SEMEN,Instituto de Investigaciones Agropecuarias,2020,2022,Gobierno Regional FIC / Fondo Regional para la Productividad y el Desarrollo,"$44,859,512.00","Laboratorio de Reproducción Ovina-Bovina, Banco de Recursos Zoogenéticos, Predio Santa Elena, Valle Simpson, Coyhaique, Región de Aysén","-45.6632, -72.0802",MINITUBE,Instrumentos Bioanaliticos,Ciencias Agrícolas / Ciencias Animales y Lechería,Activo,MAYO 2026,Sí,El equipamiento está operativo sin limitantes,Mantenimiento reactivo: No existe contrato vigente; se gestionan fondos ante fallos específicos.,,"Sí, bajo convenio",Otro
+Carla Basualto,carla.basualto@uaysen.cl,Leica Microsystems CMS GmBH Ernst-Leistz-Str 17-37 ,Universidad de Aysén,2018,2019,Fondos Institucionales / Propios,"$80,000,000.00","Laboratorio de Fisiología Celular y Metabolismo, Campus Lillo 1 (Eusebio Lillo #667), Coyhaique, Región de Aysén","-45.5765, -72.0704",Leica Microsystems CMS GmBH Ernst-Leistz-Str 17-37 Model TL - LED,Microscopios Y Difractometros,Ciencias Naturales / Ciencias Biológicas,Activo,"Julio, 2026",No,El equipamiento está operativo sin limitantes,Mantenimiento reactivo: No existe contrato vigente; se gestionan fondos ante fallos específicos.,,"Sí, sin restricciones",Sin costo: Uso abierto mediante colaboración científica.
+Alejandro Salazar,asalazab@uc.cl,Estación Meteorológica THIES Datalogger DL16 Pro,Estación Patagonia. Pontificia Universidad Católica de Chile,2018,2019,Fondos Institucionales / Propios,,"Estación Patagonia UC, Bahía Exploradores, Cuenca del Río Exploradores, Comuna de Río Ibáñez, Región de Aysén","-46.512, -73.51",THIES CLIMA - THIES Datalogger DL16 Pro,Otros,Ciencias Naturales / Ciencias de la Tierra y Medioambientales,Activo,"Julio, 2026",,El equipamiento está operativo sin limitantes,Otro,,"Sí, bajo convenio",Sin costo: Uso abierto mediante colaboración científica.`;
+
+        function loadCuratedDataset() {
+            Papa.parse(LOCAL_CSV_BACKUP, {
+                header: false,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    handleParsedCSVResults(results.data);
+                }
+            });
+        }
+
+        /* ==========================================================================
+           LIVE DATA PIPELINE (Google Apps Script Web App JSON Endpoint)
+           ========================================================================== */
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJ-5uOE1WEIpVpC0F6C1F-ExEUBWQje8HPWr_cryEVeJnbGhN7YCm_E3jpsgSuWMJksQ/exec';
+
+        async function fetchLiveDataset(isManualForce = false) {
+            const syncBtn = document.getElementById('btnSyncRefresh');
+            const syncLabel = document.getElementById('syncStatusLabel');
+            if (syncBtn) syncBtn.classList.add('spinning');
+            if (syncLabel) syncLabel.innerText = 'Sincronizando...';
+
+            try {
+                const timestamp = new Date().getTime();
+                const res = await fetch(`${APPS_SCRIPT_URL}?_cb=${timestamp}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    redirect: 'follow'
+                });
+
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                const data = await res.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    handleParsedCSVResults(data);
+                    if (syncBtn) syncBtn.classList.remove('spinning');
+                    if (syncLabel) syncLabel.innerText = 'Google Sheets Live';
+                    if (isManualForce) showToast('Datos sincronizados en tiempo real', 'success');
+                } else {
+                    throw new Error('Respuesta JSON vacía o inválida');
+                }
+            } catch (err) {
+                console.warn('Fallo al conectar con Google Apps Script endpoint. Activando respaldo.', err);
+                loadCuratedDataset();
+                if (syncBtn) syncBtn.classList.remove('spinning');
+                if (syncLabel) syncLabel.innerText = 'Datos Locales (Offline)';
+                if (isManualForce) showToast('Cargados datos locales de respaldo', 'success');
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           2. INGESTA DINÁMICA Y MAPEO DE COLUMNAS SEGÚN ENCABEZADOS REALES
+           -------------------------------------------------------------------------- */
+        function handleParsedCSVResults(rows) {
+            if (!rows || rows.length === 0) {
+                showToast('No se encontraron filas en la planilla');
+                return;
+            }
+
+            // Detección automática de fila de encabezados en las primeras 6 filas
+            let headerRowIndex = -1;
+            for (let r = 0; r < Math.min(rows.length, 6); r++) {
+                const rowStr = (rows[r] || []).join(' ').toLowerCase();
+                if (rowStr.includes('nombre del equipamiento') || (rowStr.includes('equipamiento') && rowStr.includes('instituci'))) {
+                    headerRowIndex = r;
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) headerRowIndex = 0;
+
+            const headers = (rows[headerRowIndex] || []).map(h => (h || '').toString().toLowerCase().trim());
+            
+            const getColIndex = (primaryKeywords, fallbackIndex) => {
+                const found = headers.findIndex(h => primaryKeywords.some(k => h.includes(k)));
+                return found !== -1 ? found : fallbackIndex;
+            };
+
+            // Mapeo exacto de columnas por palabras clave específicas e índice de respaldo
+            const idxStaff = getColIndex(['académico / profesional', 'nombre de quien completa', 'responsable'], 0);
+            const idxContact = getColIndex(['correo', 'email'], 1);
+            const idxTitle = getColIndex(['nombre del equipamiento', 'nombre de equipamiento'], 2);
+            const idxInst = getColIndex(['institución responsable', 'institucion responsable', 'institución'], 3);
+            const idxYearAdj = getColIndex(['año de adjudicación', 'adjudicación', 'adjudicacion'], 4);
+            const idxYearCom = getColIndex(['puesta en marcha', 'marcha'], 5);
+            const idxFunding = getColIndex(['fuente de financiamiento', 'financiamiento'], 6);
+            const idxCost = getColIndex(['costo de adquisición', 'costo de adquisicion', 'costo', 'inversión'], 7);
+            const idxLoc = getColIndex(['ubicación física', 'ubicacion fisica', 'ubicación', 'ubicacion'], 8);
+            const idxCoords = getColIndex(['coordenadas', 'latitud'], 9);
+            const idxBrand = getColIndex(['marca y modelo', 'marca'], 10);
+            const idxCatAnid = getColIndex(['categoría técnica', 'categoria tecnica', 'categoría anid'], 11);
+            const idxCatOecd = getColIndex(['categoría ocde', 'categoria ocde', 'área de conocimiento', 'area de conocimiento'], 12);
+            const idxState = getColIndex(['estado actual', 'estado'], 13);
+            const idxLastUse = getColIndex(['última fecha de uso', 'ultima fecha'], 14);
+            const idxTechStaff = getColIndex(['personal técnico', 'personal tecnico'], 15);
+            const idxLimits = getColIndex(['limitantes operativas', 'limitantes'], 16);
+            const idxMaintenance = getColIndex(['mantenimiento', 'mantención', 'mantencion'], 17);
+            const idxPubs = getColIndex(['producción científica', 'produccion cientifica', 'publicaciones'], 18);
+            const idxAccessModel = getColIndex(['modelo de acceso'], 19);
+            const idxCostModel = getColIndex(['modelo de costo', 'arancel'], 20);
+
+            const cleanVal = (row, idx) => {
+                if (idx < 0 || idx >= row.length || row[idx] === undefined || row[idx] === null) return "-";
+                const val = row[idx].toString().trim();
+                return val.length > 0 ? val : "-";
+            };
+
+            const parsedData = [];
+            let idCounter = 1;
+
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 3) continue;
+
+                // Criterio de Fila Válida: Columna C (Índice 2: Nombre del Equipamiento)
+                const title = cleanVal(row, idxTitle);
+                if (title === "-" || title.length < 2 || title.toLowerCase().includes('nombre del equipamiento')) continue;
+
+                const staff = cleanVal(row, idxStaff);
+                const contact = cleanVal(row, idxContact);
+                const inst = cleanVal(row, idxInst);
+                const yearAdj = cleanVal(row, idxYearAdj);
+                const yearCom = cleanVal(row, idxYearCom);
+                const funding = cleanVal(row, idxFunding);
+                const cost = cleanVal(row, idxCost);
+                const loc = cleanVal(row, idxLoc);
+                const brand = cleanVal(row, idxBrand);
+                const catAnid = cleanVal(row, idxCatAnid);
+                const catOecd = cleanVal(row, idxCatOecd);
+                const state = cleanVal(row, idxState);
+                const lastUse = cleanVal(row, idxLastUse);
+                const techStaff = cleanVal(row, idxTechStaff);
+                const limits = cleanVal(row, idxLimits);
+                const maintenance = cleanVal(row, idxMaintenance);
+                const publications = cleanVal(row, idxPubs);
+                const accessModel = cleanVal(row, idxAccessModel);
+                const costModel = cleanVal(row, idxCostModel);
+
+                // Parsea coordenadas numéricas exactas de la Columna J (Índice 9)
+                let lat = -50.0;
+                let lng = -71.5;
+                const coordsStr = cleanVal(row, idxCoords);
+                if (coordsStr !== "-") {
+                    const parts = coordsStr.split(/[,;\s]+/).map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
+                    if (parts.length >= 2) {
+                        lat = parts[0];
+                        lng = parts[1];
+                    }
+                }
+
+                // Asigna descripción cruzando con el diccionario de catastro_equipos_cientificos.md
+                const desc = getScientificDescription(title, inst, brand);
+
+                // Asignar responsable visible (si Col A está vacía pero Col P tiene datos de personal técnico)
+                const displayStaff = staff !== "-" ? staff : (techStaff !== "-" ? techStaff : "-");
+
+                parsedData.push({
+                    id: idCounter++,
+                    title: title,
+                    inst: inst,
+                    brand: brand,
+                    catAnid: catAnid,
+                    catOecd: catOecd,
+                    loc: loc,
+                    lat: lat,
+                    lng: lng,
+                    contact: contact,
+                    desc: desc !== "-" ? desc : (limits !== "-" ? limits : "Descripción técnica en proceso de catalogación."),
+                    funding: funding,
+                    cost: cost,
+                    year: yearAdj !== "-" ? yearAdj : (yearCom !== "-" ? yearCom : "-"),
+                    state: state !== "-" ? state : "Activo",
+                    staff: displayStaff,
+                    limits: limits,
+                    maintenance: maintenance,
+                    publications: publications,
+                    accessModel: accessModel,
+                    costModel: costModel
+                });
+            }
+
+            allEquipmentData = parsedData;
+            setupInterface();
+        }
+
+        function setupInterface() {
+            populateFilterDropdowns();
+            applyFilters();
+            calculateGlobalKPIs();
+        }
+
+        /* ==========================================================================
+           FILTER DROPDOWNS & UNIVERSAL SEARCH
+           ========================================================================== */
+        function populateFilterDropdowns() {
+            const institutions = [...new Set(allEquipmentData.map(e => e.inst).filter(Boolean))].sort();
+            const categories = [...new Set(allEquipmentData.map(e => e.catAnid).filter(Boolean))].sort();
+            const oecdAreas = [...new Set(allEquipmentData.map(e => e.catOecd).filter(Boolean))].sort();
+
+            const instSelect = document.getElementById('selectInstitution');
+            const currentInst = instSelect.value;
+            instSelect.innerHTML = '<option value="ALL">Todas las Instituciones</option>';
+            institutions.forEach(inst => {
+                const opt = document.createElement('option');
+                opt.value = inst;
+                opt.textContent = inst;
+                instSelect.appendChild(opt);
+            });
+            instSelect.value = currentInst;
+
+            const catSelect = document.getElementById('selectCategory');
+            const currentCat = catSelect.value;
+            catSelect.innerHTML = '<option value="ALL">Todas las Categorías</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                catSelect.appendChild(opt);
+            });
+            catSelect.value = currentCat;
+
+            const oecdSelect = document.getElementById('selectOecd');
+            const currentOecd = oecdSelect.value;
+            oecdSelect.innerHTML = '<option value="ALL">Todas las Áreas OCDE</option>';
+            oecdAreas.forEach(area => {
+                const opt = document.createElement('option');
+                opt.value = area;
+                opt.textContent = area.includes('/') ? area.split('/')[1].trim() : area;
+                oecdSelect.appendChild(opt);
+            });
+            oecdSelect.value = currentOecd;
+        }
+
+        function handleSearchInput() {
+            const val = document.getElementById('searchInput').value.trim();
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+            applyFilters();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            document.getElementById('searchClearBtn').style.display = 'none';
+            input.focus();
+            applyFilters();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchClearBtn').style.display = 'none';
+            document.getElementById('selectInstitution').value = 'ALL';
+            document.getElementById('selectRegion').value = 'ALL';
+            document.getElementById('selectCategory').value = 'ALL';
+            document.getElementById('selectOecd').value = 'ALL';
+            applyFilters();
+            resetMapPerspective();
+            showToast('Filtros restablecidos');
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+            const instVal = document.getElementById('selectInstitution').value;
+            const regionVal = document.getElementById('selectRegion').value;
+            const catVal = document.getElementById('selectCategory').value;
+            const oecdVal = document.getElementById('selectOecd').value;
+
+            filteredData = allEquipmentData.filter(item => {
+                const matchesSearch = !searchVal || (
+                    (item.title && item.title.toLowerCase().includes(searchVal)) ||
+                    (item.brand && item.brand.toLowerCase().includes(searchVal)) ||
+                    (item.inst && item.inst.toLowerCase().includes(searchVal)) ||
+                    (item.loc && item.loc.toLowerCase().includes(searchVal)) ||
+                    (item.desc && item.desc.toLowerCase().includes(searchVal)) ||
+                    (item.publications && item.publications.toLowerCase().includes(searchVal)) ||
+                    (item.staff && item.staff.toLowerCase().includes(searchVal))
+                );
+
+                const matchesInst = (instVal === 'ALL') || (item.inst === instVal);
+
+                let matchesRegion = true;
+                if (regionVal === 'Aysén') {
+                    matchesRegion = (item.loc && item.loc.toLowerCase().includes('aysén')) || item.lat > -50;
+                } else if (regionVal === 'Magallanes') {
+                    matchesRegion = (item.loc && (item.loc.toLowerCase().includes('magallanes') || item.loc.toLowerCase().includes('antártica'))) || item.lat <= -50;
+                }
+
+                const matchesCat = (catVal === 'ALL') || (item.catAnid === catVal);
+                const matchesOecd = (oecdVal === 'ALL') || (item.catOecd === oecdVal);
+
+                return matchesSearch && matchesInst && matchesRegion && matchesCat && matchesOecd;
+            });
+
+            document.getElementById('filterCount').innerText = filteredData.length;
+            document.getElementById('filterTotal').innerText = allEquipmentData.length;
+
+            renderCardsFeed();
+            renderMapMarkers();
+        }
+
+        /* ==========================================================================
+           KPI COMPUTATION & SMOOTH COUNTERS
+           ========================================================================== */
+        function calculateGlobalKPIs() {
+            const total = allEquipmentData.length;
+            const institutions = new Set(allEquipmentData.map(e => e.inst).filter(Boolean)).size;
+            
+            const aysenCount = allEquipmentData.filter(e => 
+                (e.loc && e.loc.toLowerCase().includes('aysén')) || e.lat > -50
+            ).length;
+            
+            const magallanesCount = allEquipmentData.filter(e => 
+                (e.loc && (e.loc.toLowerCase().includes('magallanes') || e.loc.toLowerCase().includes('antártica'))) || e.lat <= -50
+            ).length;
+
+            const oecdCount = new Set(allEquipmentData.map(e => e.catOecd).filter(Boolean)).size;
+
+            animateNumber('kpiTotal', total);
+            animateNumber('kpiInstitutions', institutions);
+            animateNumber('kpiAysen', aysenCount);
+            animateNumber('kpiMagallanes', magallanesCount);
+            animateNumber('kpiOecd', oecdCount);
+        }
+
+        function animateNumber(elementId, targetValue) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const startVal = parseInt(el.innerText) || 0;
+            const duration = 350;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentVal = Math.round(startVal + (targetValue - startVal) * easeProgress);
+                el.innerText = currentVal;
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.innerText = targetValue;
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        /* ==========================================================================
+           CARDS FEED (Full Title, Zero Truncation, Clean UI)
+           ========================================================================== */
+        function renderCardsFeed() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div class="feed-empty-state">
+                        <div class="feed-empty-icon">
+                            <i class="fa-solid fa-filter-circle-xmark"></i>
+                        </div>
+                        <h4 style="color: var(--color-corp-blue-dark); font-size: 0.95rem; font-weight: 700;">No se encontraron equipamientos</h4>
+                        <p style="font-size: 0.78rem; line-height: 1.4;">Prueba modificando tus términos de búsqueda o restableciendo los filtros seleccionados.</p>
+                        <button class="btn-reset-filters" style="margin-top: 8px; background: var(--color-corp-mint);" onclick="resetAllFilters()">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Restablecer Filtros
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredData.forEach((item, index) => {
+                const card = document.createElement('article');
+                card.className = 'card-equipment';
+                card.id = `card-eq-${item.id}`;
+                if (selectedEquipment && selectedEquipment.id === item.id) {
+                    card.classList.add('selected-card');
+                }
+
+                card.style.animation = `fadeCardIn var(--duration-fast) var(--ease-out) ${Math.min(index * 25, 250)}ms forwards`;
+
+                const oecdShort = (item.catOecd && item.catOecd.includes('/')) ? item.catOecd.split('/')[1].trim() : (item.catOecd || '-');
+                const locationShort = (item.loc && item.loc !== '-') ? item.loc.split(',')[0].trim() : '-';
+
+                card.innerHTML = `
+                    <div class="card-header-row">
+                        <h3 class="card-title">${item.title}</h3>
+                    </div>
+                    <div class="card-institution">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <span>${item.inst}</span>
+                    </div>
+                    <div class="card-location">
+                        <i class="fa-solid fa-location-dot" style="color: var(--color-corp-blue-primary);"></i>
+                        <span>${locationShort}</span>
+                    </div>
+                    <div class="card-tags-row">
+                        <span class="tag-chip"><i class="fa-solid fa-microscope"></i> ${item.catAnid}</span>
+                        <span class="tag-chip tag-oecd"><i class="fa-solid fa-graduation-cap"></i> ${oecdShort}</span>
+                    </div>
+                    <p class="card-snippet">${item.desc}</p>
+                `;
+
+                card.addEventListener('click', () => {
+                    focusEquipment(item);
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           MAP VECTOR MARKERS (Azul Corporativo con Halo Verde Menta & Clustering)
+           ========================================================================== */
+        let markersMap = {};
+
+        function renderMapMarkers() {
+            if (!mapInstance || !markersLayerGroup) return;
+            markersLayerGroup.clearLayers();
+            markersMap = {};
+
+            filteredData.forEach(item => {
+                const customPin = L.divIcon({
+                    className: 'custom-geo-pin',
+                    html: `
+                        <div class="pulse-pin-beacon"></div>
+                        <div class="pulse-pin-core"></div>
+                    `,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                    popupAnchor: [0, -14]
+                });
+
+                const marker = L.marker([item.lat, item.lng], { icon: customPin });
+
+                const popupHtml = `
+                    <div class="popup-card-content">
+                        <h4 class="popup-title">${item.title}</h4>
+                        <div class="popup-institution"><i class="fa-solid fa-building-columns"></i> ${item.inst}</div>
+                        <div class="popup-location">
+                            <i class="fa-solid fa-location-dot" style="color: var(--color-corp-blue-primary);"></i>
+                            <span>${(item.loc && item.loc !== '-') ? item.loc.split(',')[0] : '-'}</span>
+                        </div>
+                        <button class="btn-popup-inspect" onclick="openDetailModalById(${item.id})">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Ficha Completa
+                        </button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupHtml, { maxWidth: 310, minWidth: 280 });
+                
+                marker.on('click', () => {
+                    highlightCard(item.id);
+                });
+
+                markersMap[item.id] = marker;
+                markersLayerGroup.addLayer(marker);
+            });
+        }
+
+        function focusEquipment(item) {
+            selectedEquipment = item;
+            highlightCard(item.id);
+
+            const marker = markersMap[item.id];
+            if (markersLayerGroup && marker) {
+                markersLayerGroup.zoomToShowLayer(marker, () => {
+                    marker.openPopup();
+                });
+            } else if (mapInstance) {
+                mapInstance.flyTo([item.lat, item.lng], Math.max(mapInstance.getZoom(), 12), {
+                    duration: 1.2,
+                    easeLinearity: 0.25
+                });
+            }
+        }
+
+        function highlightCard(id) {
+            document.querySelectorAll('.card-equipment').forEach(c => c.classList.remove('selected-card'));
+            const targetCard = document.getElementById(`card-eq-${id}`);
+            if (targetCard) {
+                targetCard.classList.add('selected-card');
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function resetMapPerspective() {
+            if (mapInstance) {
+                mapInstance.flyTo([-51.5, -71.0], 5, { duration: 1.0 });
+            }
+        }
+
+        function focusRegion(region) {
+            if (!mapInstance) return;
+            if (region === 'Aysen') {
+                mapInstance.flyTo([-46.0, -72.5], 7, { duration: 1.2 });
+            } else if (region === 'Magallanes') {
+                mapInstance.flyTo([-57.5, -67.0], 5, { duration: 1.4 });
+            }
+        }
+
+        /* ==========================================================================
+           MODAL DE FICHA TÉCNICA DETALLADA
+           ========================================================================== */
+        function openDetailModalById(id) {
+            const item = allEquipmentData.find(e => e.id === id);
+            if (item) openModal(item);
+        }
+
+        function openModal(item) {
+            selectedEquipment = item;
+
+            document.getElementById('modalTitle').innerText = item.title;
+            document.getElementById('modalInstitution').innerHTML = `<i class="fa-solid fa-building-columns"></i> ${item.inst}`;
+            document.getElementById('modalBrand').innerText = item.brand || '-';
+            document.getElementById('modalCategory').innerText = item.catAnid || '-';
+            document.getElementById('modalOecd').innerText = item.catOecd || '-';
+            
+            document.getElementById('modalYear').innerText = item.year || '-';
+            document.getElementById('modalFunding').innerText = item.funding || '-';
+            document.getElementById('modalCost').innerText = item.cost || '-';
+            document.getElementById('modalLocation').innerText = item.loc || '-';
+            document.getElementById('modalCoords').innerText = `${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}`;
+            document.getElementById('modalDesc').innerText = item.desc || '-';
+            document.getElementById('modalStaff').innerText = item.staff || '-';
+            document.getElementById('modalMaintenance').innerText = item.maintenance || '-';
+            document.getElementById('modalLimits').innerText = item.limits || '-';
+            document.getElementById('modalCostModel').innerText = item.costModel || '-';
+
+            const pubsList = document.getElementById('modalPubsList');
+            const pubsSection = document.getElementById('modalPubsSection');
+            pubsList.innerHTML = '';
+
+            if (item.publications && item.publications !== '-' && item.publications.trim().length > 3) {
+                pubsSection.style.display = 'flex';
+                const links = item.publications.split(/[\n;]+/).map(l => l.trim()).filter(Boolean);
+                links.forEach(link => {
+                    const pubItem = document.createElement('a');
+                    pubItem.className = 'pub-link-item';
+                    pubItem.target = '_blank';
+                    if (link.startsWith('http')) {
+                        pubItem.href = link;
+                        pubItem.innerHTML = `<span><i class="fa-solid fa-arrow-up-right-from-square"></i> ${link}</span><i class="fa-solid fa-chevron-right"></i>`;
+                    } else {
+                        pubItem.href = `https://scholar.google.com/scholar?q=${encodeURIComponent(link)}`;
+                        pubItem.innerHTML = `<span><i class="fa-solid fa-graduation-cap"></i> ${link}</span><i class="fa-solid fa-chevron-right"></i>`;
+                    }
+                    pubsList.appendChild(pubItem);
+                });
+            } else {
+                pubsSection.style.display = 'none';
+            }
+
+            const contactBtn = document.getElementById('modalContactLink');
+            const contactText = document.getElementById('modalContactBtnText');
+            if (item.contact && item.contact !== '-') {
+                if (item.contact.startsWith('http')) {
+                    contactBtn.href = item.contact;
+                    contactText.innerText = 'Abrir Formulario de Solicitud';
+                } else if (item.contact.includes('@')) {
+                    contactBtn.href = `mailto:${item.contact}?subject=Consulta Acceso Equipamiento CTCI - ${encodeURIComponent(item.title)}`;
+                    contactText.innerText = `Contactar a ${item.contact.split('@')[0]}`;
+                } else {
+                    contactBtn.href = `mailto:${item.contact}`;
+                    contactText.innerText = 'Contactar';
+                }
+            } else {
+                contactBtn.href = 'mailto:investigacion@nodoaustral.cl?subject=Consulta Equipamiento CTCI';
+                contactText.innerText = 'Contactar Coordinación Nodo Austral';
+            }
+
+            const backdrop = document.getElementById('modalBackdrop');
+            backdrop.classList.add('modal-active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const backdrop = document.getElementById('modalBackdrop');
+            backdrop.classList.remove('modal-active');
+            document.body.style.overflow = '';
+        }
+
+        function handleBackdropClick(e) {
+            if (e.target.id === 'modalBackdrop') {
+                closeModal();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        function copyModalCoords() {
+            if (!selectedEquipment) return;
+            const text = `${selectedEquipment.lat}, ${selectedEquipment.lng}`;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Coordenadas copiadas al portapapeles');
+            });
+        }
+
+        function flyToCurrentEquipment() {
+            if (selectedEquipment) {
+                closeModal();
+                focusEquipment(selectedEquipment);
+            }
+        }
+
+        /* ==========================================================================
+           DATA EXPORT (CSV)
+           ========================================================================== */
+        function exportFilteredDataCSV() {
+            if (filteredData.length === 0) {
+                showToast('No hay datos filtrados para exportar');
+                return;
+            }
+
+            const headers = ["ID", "Nombre Equipamiento", "Institución", "Marca y Modelo", "Categoría ANID", "Área OCDE", "Ubicación", "Latitud", "Longitud", "Estado", "Contacto"];
+            const rows = filteredData.map(e => [
+                e.id,
+                `"${(e.title || '').replace(/"/g, '""')}"`,
+                `"${(e.inst || '').replace(/"/g, '""')}"`,
+                `"${(e.brand || '').replace(/"/g, '""')}"`,
+                `"${(e.catAnid || '').replace(/"/g, '""')}"`,
+                `"${(e.catOecd || '').replace(/"/g, '""')}"`,
+                `"${(e.loc || '').replace(/"/g, '""')}"`,
+                e.lat,
+                e.lng,
+                e.state,
+                `"${(e.contact || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Catastro_Equipamiento_Nodo_Austral_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('Archivo CSV exportado con éxito');
+        }
+
+        /* ==========================================================================
+           TOAST FEEDBACK
+           ========================================================================== */
+        let toastTimeout = null;
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            
+            toast.className = 'toast-banner toast-visible';
+            msgEl.innerText = message;
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-visible');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
