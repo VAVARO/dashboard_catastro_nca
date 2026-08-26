@@ -1,6 +1,6 @@
 # Auditoría de Acceso a la Información y Visibilidad Web del Equipamiento Científico (Macrozona Austral)
 
-Este informe presenta una auditoría empírica e independiente sobre la disponibilidad pública en internet, el tipo de presencia digital, los canales de contacto visibles en la web y los mecanismos de solicitud de acceso para los **35 equipos científicos mayores y medianos** catastrados en las regiones de Aysén y de Magallanes y de la Antártica Chilena (a partir del universo de activos del archivo `catastro_v3.csv`).
+Este informe presenta una auditoría empírica e independiente sobre la disponibilidad pública en internet, el tipo de presencia digital, los canales de contacto visibles en la web y los mecanismos de solicitud de acceso para los **37 equipos científicos mayores y medianos** catastrados en las regiones de Aysén y de Magallanes y de la Antártica Chilena (a partir del universo de activos del archivo `Catastro_v4.csv`).
 
 ---
 
@@ -8,18 +8,18 @@ Este informe presenta una auditoría empírica e independiente sobre la disponib
 
 A pesar de que el equipamiento científico mayor y mediano en la Macrozona Austral ha sido financiado fundamentalmente con fondos públicos del Estado chileno (**ANID**, FONDEQUIP, Centros de Excelencia, Gobiernos Regionales vía **FNDR / FIC**), los cuales exigen normativamente el **acceso abierto y el uso compartido interinstitucional**, la auditoría web revela un escenario de **alta opacidad digital y marcada fragmentación**:
 
-1. **Predominio del Acceso Indirecto / Mínima Presencia Web (71.4% de los equipos):** 25 de los 35 equipos catastrados **no poseen una página web propia, ficha técnica descargable ni canal de contacto directo publicado en internet**. Un investigador externo que busque utilizarlos solo encontrará menciones secundarias en noticias de prensa general, registros de adjudicación histórica de la [ANID](https://anid.cl) o publicaciones científicas (papers), debiendo recurrir a mesas centrales genéricas (OIRS u oficinas de partes) sin certeza de derivación técnica.
-2. **Presencia Institucional Específica sin Plataforma de Reserva (14.3% de los equipos):** 5 equipos disponen de una página web específica dentro de su institución (como las páginas de laboratorios de la Universidad de Aysén o la sección de equipamiento de COPAS Coastal). Si bien estas páginas describen las capacidades analíticas e identifican a los investigadores a cargo, **carecen de calendarios de disponibilidad, tarifarios públicos y formularios de reserva en línea**.
-3. **Mecanismos Formales y Plataformas Estandarizadas de Acceso (5.7% de los equipos - Nivel Alto):** 
+1. **Predominio del Acceso Indirecto / Mínima Presencia Web (73.0% de los equipos):** 27 de los 37 equipos catastrados **no poseen una página web propia, ficha técnica descargable ni canal de contacto directo publicado en internet**. Un investigador externo que busque utilizarlos solo encontrará menciones secundarias en noticias de prensa general, registros de proyectos [ANID](https://anid.cl) o publicaciones científicas (papers), debiendo recurrir a mesas centrales genéricas (OIRS, oficinas de partes o correos generales de centros) sin certeza de derivación técnica.
+2. **Presencia Institucional Específica sin Plataforma de Reserva (13.5% de los equipos):** 5 equipos disponen de una página web específica dentro de su institución (como las subpáginas de laboratorios de la Universidad de Aysén o la sección de equipamiento de COPAS Coastal). Si bien estas páginas describen las capacidades analíticas e identifican a los investigadores a cargo, **carecen de calendarios de disponibilidad, tarifarios públicos y formularios de reserva en línea**.
+3. **Mecanismos Formales y Plataformas Estandarizadas de Acceso (5.4% de los equipos - Nivel Alto):** 
    - El [Formulario Digital de Solicitud de Acceso al SEM Zeiss EVO 15](https://docs.google.com/forms/d/1wVbnAAEpA_NSauq0VjJXOcXSNFm5-uV6b-qMgJvFNFY/viewform) del **Museo Regional de Aysén (MURAY / SERPAT)** cuenta con un formulario web público estandarizado, requisitos técnicos explícitos, compromisos de coautoría/agradecimientos y criterios transparentes de priorización territorial.
    - La **Estación Patagonia UC (Pontificia Universidad Católica de Chile)** dispone de una plataforma formal dentro de la [Red de Centros y Estaciones Regionales UC (RCER UC)](https://rcer.uc.cl) que estructura el protocolo de solicitud de estadías científicas, uso de infraestructura de terreno y acceso a sus instrumentos meteorológicos en Bahía Exploradores.
-4. **Inoperatividad Digital y Activos Inactivos (8.6% de los equipos):** 3 equipos se encuentran fuera de operación (por fallas de mantenimiento o embalados en cajas), sin ninguna presencia digital que informe a la comunidad científica sobre su estado.
+4. **Inoperatividad Digital y Activos Inactivos (8.1% de los equipos):** 3 equipos se encuentran fuera de operación (por fallas de mantenimiento o embalados en cajas), sin ninguna presencia digital que informe a la comunidad científica sobre su estado.
 
 ```mermaid
-pie title Distribucion del Nivel de Acceso y Visibilidad Web (35 Equipos)
+pie title Distribucion del Nivel de Acceso y Visibilidad Web (37 Equipos)
     "Alto (Formulario web o plataforma formal de acceso)" : 2
     "Medio (Pagina web especifica de lab/equipo con contacto)" : 5
-    "Bajo (Sin pagina web especifica / Solo mesa central)" : 25
+    "Bajo (Sin pagina web especifica / Solo mesa central)" : 27
     "Nulo (Inactivo o sin presencia digital)" : 3
 ```
 
@@ -27,16 +27,16 @@ pie title Distribucion del Nivel de Acceso y Visibilidad Web (35 Equipos)
 
 ## 2. Escala de Categorización del Nivel de Acceso Web
 
-La evaluación de los 35 equipos se rige estrictamente por lo que un usuario externo puede descubrir y gestionar **exclusivamente a través de la web pública**:
+La evaluación de los 37 equipos se rige estrictamente por lo que un usuario externo puede descubrir y gestionar **exclusivamente a través de la web pública**:
 
 *   **Alto (Acceso Abierto, Transparente y Formalizado):** El equipo cuenta con presencia web activa y específica, información técnica detallada, **formulario de solicitud directo o plataforma digital formal de acceso/reserva**, canales de contacto explícitos y condiciones de uso/requisitos claramente estipulados en la web.
 *   **Medio (Acceso Vía Gestión Directa / Contacto Identificable en la Web):** El equipo figura explícitamente en una **página web dedicada** (subpágina de laboratorio, ficha técnica de equipamiento del centro o portal temático), donde se identifica públicamente en la web al responsable o canal institucional directo para gestionar el uso, aunque carece de formulario automatizado y tarifario en línea.
-*   **Bajo (Acceso Indirecto / Mínima Presencia Web):** El equipo **no posee página web dedicada ni canal de contacto directo visible en internet**. Solo es rastreable mediante registros de proyectos ANID/FNDR, menciones generales en papers o noticias históricas. Para solicitar acceso, el usuario externo debe contactar a casillas genéricas institucionales (ej. `contacto@`, `oirs@`, `vrip@`, `vridei@`) sin garantías de derivación técnica.
+*   **Bajo (Acceso Indirecto / Mínima Presencia Web):** El equipo **no posee página web dedicada ni canal de contacto directo visible en internet**. Solo es rastreable mediante registros de proyectos ANID/FNDR, menciones generales en papers o noticias históricas. Para solicitar acceso, el usuario externo debe contactar a casillas genéricas institucionales (ej. `contacto@`, `oirs@`, `vrip@`, `cere@`, `vridei@`) sin garantías de derivación técnica.
 *   **Nulo (Sin Disponibilidad / Inoperatividad Digital):** Equipamiento inactivo, almacenado en bodega sin instalación o fuera de servicio por fallas de mantenimiento, sin presencia digital ni canales disponibles para su uso.
 
 ---
 
-## 3. Matriz de Auditoría Web por Equipamiento (35 Equipos)
+## 3. Matriz de Auditoría Web por Equipamiento (37 Equipos)
 
 > **Nota metodológica:** La columna *Canal de Contacto Visible en la Web* refleja únicamente los correos, formularios o teléfonos que están **efectivamente publicados y accesibles para cualquier persona en la web**, excluyendo cualquier dato privado del catastro interno.
 
@@ -77,6 +77,8 @@ La evaluación de los 35 equipos se rige estrictamente por lo que un usuario ext
 | **33** | **UMAG** | Dron Multiespectral DJI Mavic 3M | DJI Mavic 3 Multiespectral | Sin catálogo web de equipamiento en Cs. Agropecuarias ([umag.cl](https://www.umag.cl)) | Mesa central VRIP UMAG: `vrip@umag.cl` | No publicadas en la web | **Bajo** |
 | **34** | **USACH** | Mini Micro Pulso Lidar (Base Escudero) | SigmaSpace MPL-4B-IDS-532-AT | Sin ficha web de servicio en portal USACH. Mención en prensa científica ([usach.cl](https://www.usach.cl)) | Vicerrectoría de Investigación USACH: `vridei@usach.cl` / Mesa central | No publicadas en la web | **Bajo** |
 | **35** | **USACH** | Espectroradiómetro Multicanal (Base Escudero) | Bentham Prede DMC150 POMO1 | Sin catálogo de servicios en la web institucional ([usach.cl](https://www.usach.cl)) | Vicerrectoría de Investigación USACH: `vridei@usach.cl` / Mesa central | No publicadas en la web | **Bajo** |
+| **36** | **UMAG** | Perfilador de Viento SODAR-SFAS (CERE) | Scintec SFAS | Portal web del [Centro de Estudios de los Recursos Energéticos (CERE-UMAG)](https://cere.umag.cl). Sin ficha de reserva | Correo institucional del centro: `cere@umag.cl` (Tel: +56 61 2207182) | No publicadas en la web | **Bajo** |
+| **37** | **UMAG** | Sistema Modular de Hidrógeno (Electrolizador 20 kW y Celda 10 kW) | Sistema modular de electrólisis y celda | Difusión institucional en portal [CERE-UMAG](https://cere.umag.cl). Activo en fase de implementación | Correo institucional del centro: `cere@umag.cl` / `vicerrectoria.investigacion@umag.cl` | No publicadas en la web | **Bajo** |
 
 ---
 
@@ -107,11 +109,12 @@ La evaluación de los 35 equipos se rige estrictamente por lo que un usuario ext
     *   En el portal de la universidad ([Universidad Austral de Chile](https://www.uach.cl)) no existe una ficha ni módulo de servicio para el SODAR-RASS; solo existen menciones en la prensa regional sobre monitoreo ambiental.
     *   **Canales y Brechas:** El SODAR-RASS clasifica en nivel **Bajo** (requiere contactar a la mesa central o buscar al académico en noticias) y el Ferrybox en **Nulo** (inactivo).
 
-### 4.5. Universidad de Magallanes (UMAG) - 8 Equipos
-*   **Equipos Registrados:** Plataforma MIRAS Magallanes, Espectrómetro RMN Nanalysis, Analizador TOC/TN Analytik Jena, Plataforma Eddy Covariances, Triaxial Dinámico de Geotecnia, Estación Meteorológica Campbell activa (Inst. Patagonia), Estaciones Meteorológicas Campbell inactivas en caja (3 un.), Dron DJI Mavic 3M.
+### 4.5. Universidad de Magallanes (UMAG) - 10 Equipos
+*   **Equipos Registrados:** Plataforma MIRAS Magallanes, Espectrómetro RMN Nanalysis, Analizador TOC/TN Analytik Jena, Plataforma Eddy Covariances, Triaxial Dinámico de Geotecnia, Estación Meteorológica Campbell activa (Inst. Patagonia), Estaciones Meteorológicas Campbell inactivas en caja (3 un.), Dron DJI Mavic 3M, Perfilador de Viento SODAR-SFAS (CERE-UMAG), y Sistema Modular de Hidrógeno / Electrolizador (CERE-UMAG).
 *   **Evaluación de la Web Pública:**
-    *   A través del portal de la [Vicerrectoría de Investigación, Innovación y Postgrado UMAG](https://umag.cl/vicerrectoria-de-investigacion-innovacion-y-postgrado/) y del [Instituto de la Patagonia](https://umag.cl/vicerrectoria-de-investigacion-innovacion-y-postgrado/instituto-de-la-patagonia/), se informa sobre la estructura académica de la universidad, pero **no existe un catálogo centralizado ni fichas individuales públicas de equipamiento científico**.
-    *   **Canales y Brechas:** Los canales visibles en la web son las casillas centrales `vrip@umag.cl` y `director.ip@umag.cl`. 7 equipos se encuentran en nivel **Bajo** y las 3 estaciones en caja en nivel **Nulo**.
+    *   La universidad difunde sus capacidades a través del portal de la [Vicerrectoría de Investigación, Innovación y Postgrado UMAG](https://umag.cl/vicerrectoria-de-investigacion-innovacion-y-postgrado/), la página del [Instituto de la Patagonia](https://umag.cl/vicerrectoria-de-investigacion-innovacion-y-postgrado/instituto-de-la-patagonia/) y el portal del [Centro de Estudios de los Recursos Energéticos (CERE-UMAG)](https://cere.umag.cl).
+    *   El CERE cuenta con un sitio web independiente (`cere.umag.cl`) con descripción de sus líneas de investigación en energía eólica, hidrógeno verde y una sección de equipamiento e instrumentación (`cere.umag.cl/equipamiento-e-instrumentacion/`). Sin embargo, ni el SODAR-SFAS ni el sistema modular de hidrógeno (electrolizador 20 kW / celda 10 kW) disponen de formularios de solicitud o agendas públicas de servicio para investigadores externos.
+    *   **Canales y Brechas:** Los canales visibles en la web son las casillas centrales `vrip@umag.cl`, `director.ip@umag.cl` y `cere@umag.cl`. 9 equipos se encuentran en nivel **Bajo** y las 3 estaciones en caja en nivel **Nulo**.
 
 ### 4.6. COPAS Coastal (Centro Oceanográfico / Sede Tortel) - 2 Equipos
 *   **Equipos Registrados:** Embarcación Científica Sur-Austral e Imaging FlowCytobot (IFCB McLane).
@@ -147,17 +150,17 @@ La evaluación de los 35 equipos se rige estrictamente por lo que un usuario ext
 
 | Dimensión Crítica | Diagnóstico Empírico en la Web Pública | Impacto Operacional |
 | :--- | :--- | :--- |
-| **Existencia de Ficha Web Específica** | **Solo el 20% de los equipos (7/35)** cuenta con una página web o sección dedicada en el portal institucional. El 80% es invisible o genérico. | Desconocimiento por parte de investigadores externos y empresas sobre las capacidades reales existentes en la región. |
-| **Canales de Solicitud Estandarizados** | **Solo el 5.7% (2/35)** cuenta con formulario web público o plataforma formalizada de acceso (Museo Regional de Aysén y Estación Patagonia UC). El 94.3% depende de correos informales o mesas OIRS. | Barrera de entrada para la colaboración interinstitucional, falta de trazabilidad y tiempos de respuesta indeterminados. |
+| **Existencia de Ficha Web Específica** | **Solo el 18.9% de los equipos (7/37)** cuenta con una página web o sección dedicada en el portal institucional. El 81.1% es invisible o genérico. | Desconocimiento por parte de investigadores externos y empresas sobre las capacidades reales existentes en la región. |
+| **Canales de Solicitud Estandarizados** | **Solo el 5.4% (2/37)** cuenta con formulario web público o plataforma formalizada de acceso (Museo Regional de Aysén y Estación Patagonia UC). El 94.6% depende de correos informales o mesas OIRS. | Barrera de entrada para la colaboración interinstitucional, falta de trazabilidad y tiempos de respuesta indeterminados. |
 | **Transparencia en Tarifarios y Requisitos** | **0% de los equipos** publica sus listas de precios por muestra/hora o manuales de preparación de muestras en la web. | Imposibilidad de presupuestar análisis en proyectos concursables (FONDECYT/Anillos) sin rondas previas de consultas informales. |
-| **Monitoreo de Estado Operativo** | **8.6% de los equipos catastrados (3/35)** está inactivo o guardado sin que exista información pública al respecto. | Riesgo de solicitar equipos inoperativos y desaprovechamiento de garantías o fondos de mantenimiento. |
+| **Monitoreo de Estado Operativo** | **8.1% de los equipos catastrados (3/37)** está inactivo o guardado sin que exista información pública al respecto. | Riesgo de solicitar equipos inoperativos y desaprovechamiento de garantías o fondos de mantenimiento. |
 
 ---
 
 ## 6. Recomendaciones Estratégicas para el Nodo Ciencia Austral
 
 1. **Creación del Portal Centralizado de Equipamiento Científico Austral:**
-   Desarrollar un catálogo digital unificado bajo el alero del Nodo Ciencia Austral que consolide las fichas técnicas, fotografías, capacidades analíticas y estados operativos de los 35 equipos de la macrozona.
+   Desarrollar un catálogo digital unificado bajo el alero del Nodo Ciencia Austral que consolide las fichas técnicas, fotografías, capacidades analíticas y estados operativos de los 37 equipos de la macrozona.
 2. **Estandarización de Formularios Digitales de Solicitud:**
    Replicar e institucionalizar el modelo del Museo Regional de Aysén y la Estación Patagonia UC mediante un sistema único de solicitud web interoperable para todas las instituciones del Nodo (UAY, UMAG, CIEP, INACH, UACh, COPAS, INIA, MURAY, UC, USACH).
 3. **Publicación Abierta de Reglamentos de Uso y Esquemas de Costos:**
