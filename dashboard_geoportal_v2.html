@@ -1787,8 +1787,8 @@
 
             L.control.zoom({ position: 'topleft' }).addTo(mapInstance);
 
-            // Capa Base: CARTO Positron Light (Autenticado vía API Key oficial)
-            const CARTO_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfaTMyMWw5ZGMiLCJqdGkiOiI0ODNlODVlOCJ9.a98yrAztIqoA8hu5sKA80ZYolESihIarauvCcnLyO1c';
+            // Capa Base: CARTO Positron Light (Autenticado vía Basemap Key oficial)
+            const CARTO_API_KEY = 'cb1_26jf_1_b3c8a2bb8884ddd6439f3456';
             L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`, {
                 attribution: '&copy; <a href="https://carto.com/" target="_blank" style="color: #5A6578;">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
                 subdomains: 'abcd',
