@@ -1520,20 +1520,29 @@
                     <!-- Operational & Maintenance Section -->
                     <div class="modal-specs-grid">
                         <div class="spec-item">
-                            <span class="spec-label">Personal Técnico Responsable</span>
+                            <span class="spec-label">Personal / Académico Responsable</span>
                             <span class="spec-value" id="modalStaff">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Correo de Contacto Directo</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <span class="spec-value highlight-mono" id="modalContactEmail" style="word-break: break-all;">-</span>
+                                <button class="btn-modal-secondary" id="btnCopyEmail" style="padding: 4px 8px; font-size: 0.72rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" onclick="copyModalEmail()" title="Copiar correo al portapapeles">
+                                    <i class="fa-regular fa-copy"></i> <span>Copiar Correo</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="spec-item">
                             <span class="spec-label">Esquema de Mantenimiento</span>
                             <span class="spec-value" id="modalMaintenance">-</span>
                         </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Modelo de Costos / Acceso</span>
+                            <span class="spec-value" id="modalCostModel">-</span>
+                        </div>
                         <div class="spec-item span-all">
                             <span class="spec-label">Limitantes Operativas Actuales</span>
                             <span class="spec-value" id="modalLimits">-</span>
-                        </div>
-                        <div class="spec-item span-all">
-                            <span class="spec-label">Modelo de Costos / Acceso</span>
-                            <span class="spec-value" id="modalCostModel">-</span>
                         </div>
                     </div>
 
@@ -2338,20 +2347,18 @@ Alejandro Salazar,asalazab@uc.cl,Estación Meteorológica THIES Datalogger DL16 
 
             const contactBtn = document.getElementById('modalContactLink');
             const contactText = document.getElementById('modalContactBtnText');
-            if (item.contact && item.contact !== '-') {
-                if (item.contact.startsWith('http')) {
-                    contactBtn.href = item.contact;
-                    contactText.innerText = 'Abrir Formulario de Solicitud';
-                } else if (item.contact.includes('@')) {
-                    contactBtn.href = `mailto:${item.contact}?subject=Consulta Acceso Equipamiento CTCI - ${encodeURIComponent(item.title)}`;
-                    contactText.innerText = `Contactar a ${item.contact.split('@')[0]}`;
-                } else {
-                    contactBtn.href = `mailto:${item.contact}`;
-                    contactText.innerText = 'Contactar';
-                }
+            contactText.innerText = 'Contacto con el/la encargado/a';
+
+            const emailElem = document.getElementById('modalContactEmail');
+            const emailVal = (item.contact && item.contact !== '-' && item.contact.trim() !== '') ? item.contact.trim() : 'investigacion@nodoaustral.cl';
+            if (emailElem) emailElem.innerText = emailVal;
+
+            if (emailVal.startsWith('http')) {
+                contactBtn.href = emailVal;
+            } else if (emailVal.includes('@')) {
+                contactBtn.href = `mailto:${emailVal}?subject=Consulta Acceso Equipamiento CTCI - ${encodeURIComponent(item.title)}`;
             } else {
-                contactBtn.href = 'mailto:investigacion@nodoaustral.cl?subject=Consulta Equipamiento CTCI';
-                contactText.innerText = 'Contactar Coordinación Nodo Austral';
+                contactBtn.href = `mailto:${emailVal}`;
             }
 
             const backdrop = document.getElementById('modalBackdrop');
@@ -2381,6 +2388,37 @@ Alejandro Salazar,asalazab@uc.cl,Estación Meteorológica THIES Datalogger DL16 
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Coordenadas copiadas al portapapeles');
             });
+        }
+
+        function copyModalEmail() {
+            if (!selectedEquipment) return;
+            const email = (selectedEquipment.contact && selectedEquipment.contact !== '-' && selectedEquipment.contact.trim() !== '') 
+                ? selectedEquipment.contact.trim() 
+                : 'investigacion@nodoaustral.cl';
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(email).then(() => {
+                    showToast('Correo copiado: ' + email);
+                }).catch(() => {
+                    fallbackCopyEmail(email);
+                });
+            } else {
+                fallbackCopyEmail(email);
+            }
+        }
+
+        function fallbackCopyEmail(text) {
+            const tempInput = document.createElement("input");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                showToast('Correo copiado: ' + text);
+            } catch (err) {
+                showToast('Correo: ' + text);
+            }
+            document.body.removeChild(tempInput);
         }
 
         function flyToCurrentEquipment() {
