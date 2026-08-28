@@ -1,87 +1,120 @@
-# 🌍 Dashboard y Geoportal de Equipamiento CTCI - Nodo Ciencia Austral
+# 🌍 Geoportal y Dashboard de Equipamiento CTCI - Nodo Ciencia Austral
 
 [![Nodo Ciencia Austral](https://img.shields.io/badge/Nodo-Ciencia%20Austral-1E327B?style=for-the-badge)](https://nodoaustral.cl/)
 [![Licencia](https://img.shields.io/badge/Estado-Producci%C3%B3n%20%2F%20V2-BDF8B8?style=for-the-badge&logoColor=1C1F40)](https://github.com/VAVARO/dashboard_catastro_nca)
 [![Macrozona Austral](https://img.shields.io/badge/Territorio-Ays%C3%A9n%20%7C%20Magallanes%20%7C%20Ant%C3%A1rtica-88B991?style=for-the-badge)](https://github.com/VAVARO/dashboard_catastro_nca)
 
-Visualizador interactivo, georreferenciado y catastro técnico de equipamiento e infraestructura científica y tecnológica (**CTCI**) para la **Macrozona Austral** de Chile (Regiones de Aysén del General Carlos Ibáñez del Campo, Magallanes y de la Antártica Chilena, y Territorio Chileno Antártico).
+Plataforma interactiva, georreferenciada y de acceso abierto para el catastro técnico de equipamiento e infraestructura científica y tecnológica (**CTCI**) de la **Macrozona Austral de Chile** (Región de Aysén del General Carlos Ibáñez del Campo, Región de Magallanes y de la Antártica Chilena, y Territorio Chileno Antártico).
 
 ---
 
-## 🚀 Características Principales
+## 📌 1. Visión General y Arquitectura
 
-*   **🗺️ Mapa Interactivo Cartográfico:**
-    *   Desarrollado con **Leaflet.js** y **Leaflet.markercluster**.
-    *   Georreferenciación precisa desde Coyhaique hasta Puerto Williams, Cabo de Hornos e Islas Shetland del Sur / Península Antártica.
-    *   Marcadores de pulso con identidad corporativa (Azul `#1E327B` y Verde Menta `#BDF8B8`).
-    *   Navegación espacial y zoom inteligente por región y por campus/estación.
+El Geoportal permite a investigadores/as, instituciones y tomadores de decisión explorar, filtrar y solicitar acceso a los **37 equipamientos científicos mayores y medianos** catastrados en la macrozona.
 
-*   **📊 Sincronización en Vivo (Live Connection):**
-    *   Integración directa mediante **PapaParse** con Google Sheets en tiempo real y fallback local al dataset CSV estructurado.
-    *   Filtros dinámicos reactivos: Búsqueda textual en tiempo real, Institución, Categoría Técnica ANID, Categoría OCDE de Conocimiento y Nivel de Acceso.
-
-*   **🔬 Ficha Técnica y Modal de Detalle:**
-    *   Visualización de metadatos completos: institución, campus/sede, personal técnico responsable, financiamiento ANID FONDEQUIP, costos formateados en moneda chilena (`$XX.XXX.XXX CLP`), limitaciones operativas, esquemas de mantenimiento y modelos de costo/acceso.
-    *   Listado de publicaciones científicas y artículos indexados con enlaces directos a sus **DOIs oficiales**.
-    *   Botón estandarizado de contacto directo con encargados/as (`mailto:` preconfigurado o enlace a formulario externo).
-
-*   **🎨 Diseño Visual e Identidad Gráfica:**
-    *   Diseño fiel al **Manual de Identidad Gráfica Oficial del Nodo Ciencia Austral** en modo claro de alto contraste.
-    *   Tipografía oficial **Montserrat** y jerarquía espacial limpia.
-    *   Botón *"Ver Ficha"* en cada tarjeta del sidebar para inspección sin pérdida de contexto cartográfico.
+### Flujo de Datos y Resiliencia (Dual-Mode)
+1. **Conexión en Vivo (Online):** Al cargar, la aplicación consulta directamente la planilla pública de Google Sheets en formato CSV mediante `PapaParse`. Esto permite que cualquier edición en la planilla se refleje inmediatamente en el dashboard sin tocar código.
+2. **Respaldo Local Integrado (Offline / Contingencia):** Si la conexión a internet falla o el archivo se abre localmente (`file:///`), el sistema conmuta automáticamente a una constante embebida (`LOCAL_CSV_BACKUP`) enriquecida con los datos del catálogo curado `Catastro_v4.csv`.
+3. **Diccionario Descriptivo Científico:** Incorpora un motor en JavaScript (`SCIENTIFIC_DESCRIPTIONS` y `getScientificDescription()`) que asocia automáticamente el principio físico/técnico y las aplicaciones científicas a cada equipo.
 
 ---
 
-## 📂 Estructura del Repositorio
+## 📂 2. Mapa del Repositorio y Catálogo de Archivos
+
+A continuación se detalla el propósito exacto de cada elemento del repositorio para facilitar su mantenimiento y transferencia a futuros administradores:
 
 ```text
-├── index.html                                  # Redirección de entrada (GitHub Pages ready)
-├── dashboard_geoportal_v2.html                 # Aplicación web interactiva principal del Geoportal
-├── dashboard_simulacion.html                   # Simulación standalone ligera de respaldo
-├── Catastro Equipamiento Macrozona Austral.csv # Base de datos oficial catastrada (29 equipos)
-├── Logo-Nodo-sinfondo-1-scaled.png             # Logo oficial en alta resolución
+├── 🌐 Aplicación Web Principal (Producción):
+│   ├── index.html                                  # Entrada web que redirige al Geoportal de Producción (GitHub Pages)
+│   ├── dashboard_geoportal_v2.html                 # APLICACIÓN PRINCIPAL (HTML/CSS/JS autónomo de producción)
+│   └── Logo-Nodo-sinfondo-1-scaled.png             # Logo oficial en alta resolución del Nodo Ciencia Austral
 │
-├── 📑 Informes Técnicos y de Auditoría:
-├── catastro_equipos_cientificos.md             # Catastro descriptivo de 29 instrumentos CTCI
-├── acceso_informacion_equipos.md               # Análisis de accesibilidad y condiciones de uso
-├── propuesta_integracion_geoportal.md          # Especificaciones técnicas de integración
-├── responsables_equipamiento_inach.md          # Caracterización técnica y responsables INACH
-├── fuentes_verificacion_inach.md               # Auditoría exhaustiva de fuentes y DOIs INACH
-├── responsables_equipamiento_umag.md           # Caracterización técnica y responsables UMAG
-└── auditoria_ubicaciones_umag_inach.md         # Chequeo y coordenadas verificadas UMAG e INACH
+├── 📊 Base de Datos Oficial:
+│   └── Catastro_v4.csv                             # Dataset maestro y curado (37 equipamientos, contactos, DOIs, coordenadas)
+│
+├── 📑 Informes Técnicos, Auditorías y Criterio Científico:
+│   ├── catastro_equipos_cientificos.md             # Diccionario descriptivo técnico y funcional de los 37 equipos
+│   ├── acceso_informacion_equipos.md               # Auditoría de presencia web, tarifas, formularios y modelos de acceso
+│   ├── auditoria_ubicaciones_umag_inach.md         # Verificación y georreferenciación de precisión para UMAG e INACH
+│   ├── fuentes_verificacion_inach.md               # Respaldo documental, DOIs, papers WoS/Scopus e historial INACH
+│   ├── responsables_equipamiento_inach.md          # Fichas técnicas de investigadores y técnicos responsables (INACH)
+│   ├── responsables_equipamiento_umag.md           # Fichas técnicas de investigadores y técnicos responsables (UMAG)
+│   ├── propuesta_integracion_geoportal.md          # Especificaciones de diseño UI/UX y arquitectura inicial
+│   └── Manual_de_Colaboración_Geoportal.pdf       # Manual institucional de usuario y colaboración
+│
+└── ⚠️ Archivos Duplicados, Prototipos o Versiones Previas (Ver sección 3):
+    ├── dashboard_geoportal_v2_2.html               # [DUPLICADO] Copia experimental secundaria de dashboard_geoportal_v2.html
+    ├── dashboard_simulacion.html                   # [OBSOLETO] Prototipo inicial con datos mockeados previos a V2
+    ├── simulacion_dashboard.md                     # [OBSOLETO] Notas y especificaciones del prototipo inicial
+    ├── catastro_v3.csv                             # [OBSOLETO] Versión preliminar del CSV (28 equipos)
+    ├── catastro_v2.xlsx                            # [OBSOLETO] Archivo Excel de etapas tempranas del levantamiento
+    └── Catastro Equipamiento Macrozona Austral...csv # [OBSOLETO] Descarga cruda anterior de Google Sheets
 ```
 
 ---
 
-## 🏛️ Instituciones Catastradas en la Macrozona Austral
+## 🔍 3. Auditoría de Archivos: Activos vs. Duplicados / Obsoletos
 
-1.  **Universidad de Aysén (UAysén)** – Campus Lillo / Campus Río Simpson, Coyhaique.
-2.  **Universidad de Magallanes (UMAG)** – CADI-UMAG, Instituto de la Patagonia y Parque Omora.
-3.  **Instituto Antártico Chileno (INACH)** – Laboratorios Jorge Berguño, Base Prat, Base Yelcho y AP Viel.
-4.  **Centro de Investigación en Ecosistemas de la Patagonia (CIEP)** – Coyhaique.
-5.  **Instituto de Investigaciones Agropecuarias (INIA)** – CRI Tamel Aike e INIA Kampenaike.
-6.  **Instituto de Fomento Pesquero (IFOP)** – Bases Aysén y Punta Arenas.
-7.  **Universidad Austral de Chile (UACh)** – Campus Patagonia, Coyhaique.
-8.  **Museo Regional de Aysén** – Coyhaique Alto.
-9.  **Centro de Estudios del Cuaternario Fuego-Patagonia y Antártica (CEQUA)** – Punta Arenas.
+Para mantener el repositorio limpio y evitar confusiones a futuros desarrolladores, a continuación se resumen los archivos que **están en uso activo** y aquellos que **pueden ser eliminados o archivados**:
 
----
-
-## 💻 Visualización Local y Despliegue
-
-### 1. Visualización Rápida
-Puedes abrir directamente en cualquier navegador web moderno:
-```bash
-# Abrir el geoportal directamente
-dashboard_geoportal_v2.html
-```
-
-### 2. Despliegue en GitHub Pages
-1. Ve a los **Settings** de este repositorio en GitHub.
-2. En la sección **Pages**, selecciona la rama `main` (o `master`) y la carpeta `/ (root)`.
-3. Haz clic en **Save**. En pocos segundos la aplicación estará disponible en línea.
+| Archivo | Estado | Rol / Justificación | Acción Recomendada |
+| :--- | :---: | :--- | :---: |
+| **`index.html`** | 🟢 **Activo** | Entrada del despliegue en GitHub Pages. Redirige a `dashboard_geoportal_v2.html`. | **Conservar** |
+| **`dashboard_geoportal_v2.html`** | 🟢 **Activo** | **Aplicación web central en producción.** Contiene todo el diseño, mapa, filtros, modal y lógica. | **Conservar (Principal)** |
+| **`Catastro_v4.csv`** | 🟢 **Activo** | Base de datos maestra con los 37 equipos normalizados y enriquecidos. | **Conservar (Fuente de Verdad)** |
+| **`Logo-Nodo-sinfondo-1-scaled.png`** | 🟢 **Activo** | Asset gráfico oficial mostrado en el header y documentación. | **Conservar** |
+| **`catastro_equipos_cientificos.md`** | 🟢 **Activo** | Diccionario fuente de las descripciones científicas integradas en el Geoportal. | **Conservar** |
+| **`acceso_informacion_equipos.md`** | 🟢 **Activo** | Auditoría y documentación metodológica de acceso y tarifas. | **Conservar** |
+| **`auditoria_ubicaciones_umag_inach.md`** | 🟢 **Activo** | Documentación de verificación de coordenadas geográficas. | **Conservar** |
+| **`fuentes_verificacion_inach.md`** | 🟢 **Activo** | Respaldo de publicaciones científicas y DOIs para INACH. | **Conservar** |
+| **`responsables_equipamiento_inach.md`** | 🟢 **Activo** | Directorio verificado de responsables INACH. | **Conservar** |
+| **`responsables_equipamiento_umag.md`** | 🟢 **Activo** | Directorio verificado de responsables UMAG. | **Conservar** |
+| **`Manual_de_Colaboración_Geoportal.pdf`** | 🟢 **Activo** | Manual de usuario institucional. | **Conservar** |
+| **`propuesta_integracion_geoportal.md`** | 🟢 **Activo** | Documento histórico de diseño técnico. | **Conservar** |
+| `dashboard_geoportal_v2_2.html` | 🟡 **Duplicado** | Versión experimental intermedia similar a `v2.html`. No está enlazada en `index.html`. | **Eliminar** (o archivar en `/legacy`) |
+| `dashboard_simulacion.html` | 🔴 **Obsoleto** | Prototipo inicial estático con datos simulados desarrollado antes del Geoportal V2. | **Eliminar** (o archivar en `/legacy`) |
+| `simulacion_dashboard.md` | 🔴 **Obsoleto** | Guía de uso del prototipo inicial de simulación. | **Eliminar** (o archivar en `/legacy`) |
+| `catastro_v3.csv` | 🔴 **Obsoleto** | Versión previa de 28 equipos superada por `Catastro_v4.csv` (37 equipos). | **Eliminar** |
+| `catastro_v2.xlsx` | 🔴 **Obsoleto** | Archivo Excel preliminar superado por `Catastro_v4.csv`. | **Eliminar** |
+| `Catastro Equipamiento Macrozona Austral - Sheet1 (1).csv` | 🔴 **Obsoleto** | Exportación cruda antigua superada por `Catastro_v4.csv`. | **Eliminar** |
 
 ---
 
-## 📜 Licencia y Créditos
-Iniciativa desarrollada para el proyecto **Nodo Ciencia Austral**, financiado por la **Agencia Nacional de Investigación y Desarrollo (ANID)** del Ministerio de Ciencia, Tecnología, Conocimiento e Innovación de Chile.
+## 🛠️ 4. Guía de Mantenimiento para Futuros Administradores
+
+### A. ¿Cómo actualizar o agregar datos de equipamiento?
+1. **Opción recomendada (en tiempo real):** Editar directamente la planilla compartida de Google Sheets. Al recargar la página web, los cambios aparecerán inmediatamente.
+2. **Opción local:** Si se actualiza el archivo `Catastro_v4.csv`, se recomienda copiar las nuevas filas dentro de la constante `LOCAL_CSV_BACKUP` en `dashboard_geoportal_v2.html` (alrededor de la línea 1830) para mantener el soporte offline sincronizado.
+
+### B. ¿Cómo agregar la descripción de un nuevo equipo?
+En `dashboard_geoportal_v2.html`:
+1. Abrir el objeto `SCIENTIFIC_DESCRIPTIONS` (L1620 aprox.) y añadir la entrada con el título y la descripción científica redactada.
+2. En la función `getScientificDescription(title, inst, brand)` (L1710 aprox.), añadir la condición con palabras clave que mapee al nuevo texto.
+
+### C. ¿Cómo funciona la ficha técnica y el contacto?
+- Al hacer clic en *"Ver Ficha"* o en un marcador del mapa, se abre el modal con la información del equipo.
+- **Correo visible y botón de copiado:** En la sección *Operación, Responsable y Contacto*, se muestra el correo directo (`#modalContactEmail`) y el botón `Copiar Correo` (`copyModalEmail()`) que copia la dirección con 1 clic al portapapeles y despliega una alerta toast.
+- **Botón de contacto inferior:** El botón `Contacto con el/la encargado/a` abre el cliente de correo prellenado con asunto institucional o redirige al formulario externo correspondiente.
+
+### D. Tecnologías y Librerías Utilizadas
+- **HTML5 / CSS3 nativo:** Sin frameworks pesados; carga ultrarrápida y diseño responsive (modo claro con paleta corporativa `#1E327B`, `#EFF7F0`, `#BDF8B8`, `#88B991`).
+- **Leaflet.js (v1.9.4):** Renderizado cartográfico con tiles *CartoDB Positron*.
+- **Leaflet.markercluster (v1.5.3):** Agrupamiento dinámico de marcadores geográficos.
+- **PapaParse (v5.4.1):** Parser CSV en vivo desde Google Sheets.
+- **FontAwesome 6.4.0 & Google Fonts (Montserrat):** Iconografía y tipografía institucional.
+
+---
+
+## 🚀 5. Despliegue en GitHub Pages
+
+1. Ir a los **Settings** del repositorio en GitHub.
+2. En la sección **Pages** (menú lateral izquierdo):
+   - **Source:** *Deploy from a branch*.
+   - **Branch:** `main` (o `master`) / Carpeta: `/ (root)`.
+3. Guardar. El archivo `index.html` redirige automáticamente a `dashboard_geoportal_v2.html`.
+
+---
+
+## 📜 6. Créditos y Financiamiento
+
+Desarrollado en el marco del proyecto **Nodo Ciencia Austral**, financiado por la **Agencia Nacional de Investigación y Desarrollo (ANID)** del Ministerio de Ciencia, Tecnología, Conocimiento e Innovación de Chile.
