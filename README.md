@@ -103,4 +103,5 @@ En `dashboard_geoportal_v2.html`:
 
 ## 📜 6. Créditos y Financiamiento
 
-Desarrollado en el marco del proyecto **Nodo Ciencia Austral**, financiado por la **Agencia Nacional de Investigación y Desarrollo (ANID)** del Ministerio de Ciencia, Tecnología, Conocimiento e Innovación de Chile.
+- **Iniciativa y Financiamiento:** Desarrollado en el marco del proyecto **Nodo Ciencia Austral**, financiado por la **Agencia Nacional de Investigación y Desarrollo (ANID)** del Ministerio de Ciencia, Tecnología, Conocimiento e Innovación de Chile.
+- **Elaboración y Desarrollo:** [Álvaro Contreras Barrios](https://www.linkedin.com/in/alvaro-contreras-barrios/)

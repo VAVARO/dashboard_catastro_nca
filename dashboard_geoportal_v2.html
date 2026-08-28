@@ -592,6 +592,41 @@
             background: rgba(30, 50, 123, 0.30);
         }
 
+        /* Sidebar Footer (Créditos de Autor) */
+        .sidebar-footer {
+            padding: 10px 18px;
+            background-color: var(--color-surface-white);
+            border-top: var(--border-divider);
+            font-size: 0.76rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .sidebar-footer .author-link {
+            color: var(--color-corp-blue-primary);
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .sidebar-footer .author-link:hover {
+            color: #0077b5;
+            text-decoration: underline;
+        }
+
+        .sidebar-footer .author-link i {
+            font-size: 0.86rem;
+            color: #0077b5;
+        }
+
         /* Card Component (Sin Truncamiento, Altamente Legible) */
         .card-equipment {
             background-color: var(--color-surface-white);
@@ -1464,6 +1499,11 @@
                 <!-- Cards Feed -->
                 <div class="equipment-cards-feed" id="cardsContainer">
                     <!-- Dynamic rendering -->
+                </div>
+
+                <!-- Sidebar Footer (Autor) -->
+                <div class="sidebar-footer">
+                    <span>Elaborado por: <a href="https://www.linkedin.com/in/alvaro-contreras-barrios/" target="_blank" rel="noopener noreferrer" class="author-link" title="Ver perfil de LinkedIn"><i class="fa-brands fa-linkedin"></i> Álvaro Contreras Barrios</a></span>
                 </div>
             </aside>
 
