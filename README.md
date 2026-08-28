@@ -32,51 +32,37 @@ A continuación se detalla el propósito exacto de cada elemento del repositorio
 ├── 📊 Base de Datos Oficial:
 │   └── Catastro_v4.csv                             # Dataset maestro y curado (37 equipamientos, contactos, DOIs, coordenadas)
 │
-├── 📑 Informes Técnicos, Auditorías y Criterio Científico:
-│   ├── catastro_equipos_cientificos.md             # Diccionario descriptivo técnico y funcional de los 37 equipos
-│   ├── acceso_informacion_equipos.md               # Auditoría de presencia web, tarifas, formularios y modelos de acceso
-│   ├── auditoria_ubicaciones_umag_inach.md         # Verificación y georreferenciación de precisión para UMAG e INACH
-│   ├── fuentes_verificacion_inach.md               # Respaldo documental, DOIs, papers WoS/Scopus e historial INACH
-│   ├── responsables_equipamiento_inach.md          # Fichas técnicas de investigadores y técnicos responsables (INACH)
-│   ├── responsables_equipamiento_umag.md           # Fichas técnicas de investigadores y técnicos responsables (UMAG)
-│   ├── propuesta_integracion_geoportal.md          # Especificaciones de diseño UI/UX y arquitectura inicial
-│   └── Manual_de_Colaboración_Geoportal.pdf       # Manual institucional de usuario y colaboración
-│
-└── ⚠️ Archivos Duplicados, Prototipos o Versiones Previas (Ver sección 3):
-    ├── dashboard_geoportal_v2_2.html               # [DUPLICADO] Copia experimental secundaria de dashboard_geoportal_v2.html
-    ├── dashboard_simulacion.html                   # [OBSOLETO] Prototipo inicial con datos mockeados previos a V2
-    ├── simulacion_dashboard.md                     # [OBSOLETO] Notas y especificaciones del prototipo inicial
-    ├── catastro_v3.csv                             # [OBSOLETO] Versión preliminar del CSV (28 equipos)
-    ├── catastro_v2.xlsx                            # [OBSOLETO] Archivo Excel de etapas tempranas del levantamiento
-    └── Catastro Equipamiento Macrozona Austral...csv # [OBSOLETO] Descarga cruda anterior de Google Sheets
+└── 📑 Informes Técnicos, Auditorías y Criterio Científico:
+    ├── catastro_equipos_cientificos.md             # Diccionario descriptivo técnico y funcional de los 37 equipos
+    ├── acceso_informacion_equipos.md               # Auditoría de presencia web, tarifas, formularios y modelos de acceso
+    ├── auditoria_ubicaciones_umag_inach.md         # Verificación y georreferenciación de precisión para UMAG e INACH
+    ├── fuentes_verificacion_inach.md               # Respaldo documental, DOIs, papers WoS/Scopus e historial INACH
+    ├── responsables_equipamiento_inach.md          # Fichas técnicas de investigadores y técnicos responsables (INACH)
+    ├── responsables_equipamiento_umag.md           # Fichas técnicas de investigadores y técnicos responsables (UMAG)
+    ├── propuesta_integracion_geoportal.md          # Especificaciones de diseño UI/UX y arquitectura inicial
+    └── Manual_de_Colaboración_Geoportal.pdf       # Manual institucional de usuario y colaboración
 ```
 
 ---
 
-## 🔍 3. Auditoría de Archivos: Activos vs. Duplicados / Obsoletos
+## 🔍 3. Catálogo de Archivos y Componentes
 
-Para mantener el repositorio limpio y evitar confusiones a futuros desarrolladores, a continuación se resumen los archivos que **están en uso activo** y aquellos que **pueden ser eliminados o archivados**:
+El repositorio se encuentra optimizado y libre de duplicados. Todos los archivos cumplen una función específica:
 
-| Archivo | Estado | Rol / Justificación | Acción Recomendada |
-| :--- | :---: | :--- | :---: |
-| **`index.html`** | 🟢 **Activo** | Entrada del despliegue en GitHub Pages. Redirige a `dashboard_geoportal_v2.html`. | **Conservar** |
-| **`dashboard_geoportal_v2.html`** | 🟢 **Activo** | **Aplicación web central en producción.** Contiene todo el diseño, mapa, filtros, modal y lógica. | **Conservar (Principal)** |
-| **`Catastro_v4.csv`** | 🟢 **Activo** | Base de datos maestra con los 37 equipos normalizados y enriquecidos. | **Conservar (Fuente de Verdad)** |
-| **`Logo-Nodo-sinfondo-1-scaled.png`** | 🟢 **Activo** | Asset gráfico oficial mostrado en el header y documentación. | **Conservar** |
-| **`catastro_equipos_cientificos.md`** | 🟢 **Activo** | Diccionario fuente de las descripciones científicas integradas en el Geoportal. | **Conservar** |
-| **`acceso_informacion_equipos.md`** | 🟢 **Activo** | Auditoría y documentación metodológica de acceso y tarifas. | **Conservar** |
-| **`auditoria_ubicaciones_umag_inach.md`** | 🟢 **Activo** | Documentación de verificación de coordenadas geográficas. | **Conservar** |
-| **`fuentes_verificacion_inach.md`** | 🟢 **Activo** | Respaldo de publicaciones científicas y DOIs para INACH. | **Conservar** |
-| **`responsables_equipamiento_inach.md`** | 🟢 **Activo** | Directorio verificado de responsables INACH. | **Conservar** |
-| **`responsables_equipamiento_umag.md`** | 🟢 **Activo** | Directorio verificado de responsables UMAG. | **Conservar** |
-| **`Manual_de_Colaboración_Geoportal.pdf`** | 🟢 **Activo** | Manual de usuario institucional. | **Conservar** |
-| **`propuesta_integracion_geoportal.md`** | 🟢 **Activo** | Documento histórico de diseño técnico. | **Conservar** |
-| `dashboard_geoportal_v2_2.html` | 🟡 **Duplicado** | Versión experimental intermedia similar a `v2.html`. No está enlazada en `index.html`. | **Eliminar** (o archivar en `/legacy`) |
-| `dashboard_simulacion.html` | 🔴 **Obsoleto** | Prototipo inicial estático con datos simulados desarrollado antes del Geoportal V2. | **Eliminar** (o archivar en `/legacy`) |
-| `simulacion_dashboard.md` | 🔴 **Obsoleto** | Guía de uso del prototipo inicial de simulación. | **Eliminar** (o archivar en `/legacy`) |
-| `catastro_v3.csv` | 🔴 **Obsoleto** | Versión previa de 28 equipos superada por `Catastro_v4.csv` (37 equipos). | **Eliminar** |
-| `catastro_v2.xlsx` | 🔴 **Obsoleto** | Archivo Excel preliminar superado por `Catastro_v4.csv`. | **Eliminar** |
-| `Catastro Equipamiento Macrozona Austral - Sheet1 (1).csv` | 🔴 **Obsoleto** | Exportación cruda antigua superada por `Catastro_v4.csv`. | **Eliminar** |
+| Archivo | Rol en el Proyecto | Tipo |
+| :--- | :--- | :---: |
+| **`index.html`** | Entrada del despliegue en GitHub Pages. Redirige a `dashboard_geoportal_v2.html`. | Frontend / Routing |
+| **`dashboard_geoportal_v2.html`** | **Aplicación web central en producción.** Contiene diseño, mapa interactivo, filtros, modal y lógica. | Frontend / Producción |
+| **`Catastro_v4.csv`** | Base de datos maestra con los 37 equipos normalizados y enriquecidos. | Datos / Fuente de Verdad |
+| **`Logo-Nodo-sinfondo-1-scaled.png`** | Asset gráfico institucional mostrado en el header y documentación. | Multimedia |
+| **`catastro_equipos_cientificos.md`** | Diccionario fuente de las descripciones científicas integradas en el Geoportal. | Documentación Técnica |
+| **`acceso_informacion_equipos.md`** | Auditoría y documentación metodológica de acceso y tarifas. | Documentación Metodológica |
+| **`auditoria_ubicaciones_umag_inach.md`** | Documentación de verificación de coordenadas geográficas. | Documentación Geográfica |
+| **`fuentes_verificacion_inach.md`** | Respaldo de publicaciones científicas y DOIs para INACH. | Auditoría Científica |
+| **`responsables_equipamiento_inach.md`** | Directorio verificado de responsables INACH. | Directorio de Contactos |
+| **`responsables_equipamiento_umag.md`** | Directorio verificado de responsables UMAG. | Directorio de Contactos |
+| **`Manual_de_Colaboración_Geoportal.pdf`** | Manual de usuario y colaboración institucional. | Documentación de Usuario |
+| **`propuesta_integracion_geoportal.md`** | Documento histórico de diseño técnico y arquitectura. | Arquitectura de Software |
 
 ---
 
